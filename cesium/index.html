@@ -12,9 +12,16 @@
   <body>
     <div id="cesiumContainer"></div>
     <script>
-      // Get your token from https://cesium.com/ion/tokens
-      Cesium.Ion.defaultAccessToken = "MY EYES ONLY";
-      const viewer = new Cesium.Viewer("cesiumContainer");
+        Cesium.Ion.defaultAccessToken = "MY EYES ONLY";
+        const viewer = new Cesium.Viewer("cesiumContainer", {  
+            terrainProvider: Cesium.createWorldTerrain()
+        });
+        // const tileset = viewer.scene.primitives.add(
+        //     Cesium.createGooglePhotorealistic3DTileset()
+        // );
+        // const osmBuildings = viewer.scene.primitives.add(
+        //     Cesium.createOsmBuildings()
+        // );
     </script>
   </body>
 </html>
