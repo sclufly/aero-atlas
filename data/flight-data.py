@@ -1,14 +1,16 @@
-import json, threading, time
+import json, threading, time, os
 from contextlib import closing
 from urllib.request import urlopen, URLError
 from requests_html import AsyncHTMLSession
 asession = AsyncHTMLSession()
+from dotenv import load_dotenv
+load_dotenv()
 
-# store urls
-pi_url="http://192.168.1.101/skyaware/data/aircraft.json"
-server_url="https://www.leisurerules.ca/mouseTrap/test_php.php"
-headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-flight_url="https://www.flightaware.com/live/flight/"
+# store env variables
+PI_URL = os.getenv('WATERLOO_PI_URL')
+SERVER_URL=os.getenv('SERVER_URL')
+HEADERS=os.getenv('HEADERS')
+FLIGHT_URL=os.getenv('FLIGHT_URL')
 
 # renders the given url asyncronously for scraping
 async def render_page(url):
@@ -34,7 +36,7 @@ def get_online_flight_data(url):
 
 # accesses data from the Raspberry PI site   
 def get_pi_flight_data():
-    with closing(urlopen(pi_url, None, 5.0)) as aircraft_file:
+    with closing(urlopen(PI_URL, None, 5.0)) as aircraft_file:
         return json.load(aircraft_file)
 
 def main():
@@ -52,7 +54,7 @@ def main():
 
             # get data from the web
             if flight:
-                orig, dest, type = get_online_flight_data(flight_url + str(flight))
+                orig, dest, type = get_online_flight_data(FLIGHT_URL + str(flight))
 
             if lat and lon:
 
@@ -61,7 +63,7 @@ def main():
                 
                 # send data to the server
                 # userdata = {"flight": flight, "lat": lat, "lon": lon}
-                # resp = requests.post(server_url, params=userdata)
+                # resp = requests.post(SERVER_URL, params=userdata)
                 # print(resp)
                 # print(resp.text)
 
