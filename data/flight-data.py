@@ -56,10 +56,13 @@ def main():
             if flight:
                 orig, dest, type = get_online_flight_data(FLIGHT_URL + str(flight))
 
+            # get time   
+            epoch_time = int(time.time())
+
             if lat and lon:
 
                 # print data
-                print("Flight number: {flight} Latitude: {lat:.4f} Longitude: {lon:.4f} Origin: {orig} Destination: {dest} Plane Type: {type}".format(flight=flight, lat=lat, lon=lon, orig=orig, dest=dest, type=type))
+                print("Flight number: {flight} Latitude: {lat:.4f} Longitude: {lon:.4f} Origin: {orig} Destination: {dest} Plane Type: {type} Time: {epoch_time}".format(flight=flight, lat=lat, lon=lon, orig=orig, dest=dest, type=type, epoch_time=epoch_time))
                 
                 # send data to the server
                 # userdata = {"flight": flight, "lat": lat, "lon": lon}
