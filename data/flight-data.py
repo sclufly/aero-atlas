@@ -52,7 +52,7 @@ def main():
             dest = None
             type = None
 
-            # get data from the web
+            # get data from the web 
             if flight:
                 orig, dest, type = get_online_flight_data(FLIGHT_URL + str(flight))
 
