@@ -16,6 +16,7 @@ FLIGHT_URL=os.getenv('FLIGHT_URL')
 
 # store constants
 states = ['AL', 'AK', 'AS', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FM', 'FL', 'GA', 'GU', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MH', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'MP', 'OH', 'OK', 'OR', 'PW', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VI', 'VA', 'WA', 'WV', 'WI', 'WY'];
+plane_type_xpath = '//div[contains(@class, "flightPageDataRow")]//div[contains(@class, "flightPageDataLabel") and contains(., "Aircraft Type")]/following-sibling::div[@class="flightPageData"]'
 
 
 # renders the given url asyncronously for scraping
@@ -37,9 +38,8 @@ def get_online_plane_data(url):
         )[0].html
 
         # find plane type info
-        # plane = results_html.find('.flightPageDataLabel', containing='Aircraft Type')
-        # plane_type = plane.find('.flightPageData', first=True).text
-        # print("plane type === ", plane_type)
+        plane_type = results_html.xpath(plane_type_xpath, first=True).text
+        plane_type = plane_type[:plane_type.find('(')].rstrip()
 
         # find origin info
         origin = results_html.find('.flightPageSummaryOrigin', first=True)
@@ -59,7 +59,7 @@ def get_online_plane_data(url):
         if (dest_country in states):
             dest_country = "United States"
         
-        return origin_code, origin_city, origin_country, dest_code, dest_city, dest_country
+        return plane_type, origin_code, origin_city, origin_country, dest_code, dest_city, dest_country
     
     except:
         print("ERROR - unable to scrape data from", url)
@@ -117,11 +117,9 @@ def main():
             print("PI --- ", flight_number, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes)
 
             # get the plane data from online
-            
-            origin_code, origin_city, origin_country, dest_code, dest_city, dest_country = get_online_plane_data(FLIGHT_URL + str(flight_number))
-            print("ON --- ", origin_code, origin_city, origin_country, dest_code, dest_city, dest_country)
+            plane_type, origin_code, origin_city, origin_country, dest_code, dest_city, dest_country = get_online_plane_data(FLIGHT_URL + str(flight_number))
+            print("ON --- ", plane_type, origin_code, origin_city, origin_country, dest_code, dest_city, dest_country)
 
-            
             # send data to the server
             # userdata = {"flight": flight, "lat": lat, "lon": lon}
             # resp = requests.post(SERVER_URL, params=userdata)
