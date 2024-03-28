@@ -29,20 +29,25 @@ async def render_page(url):
 # data -- plane type, origin airport code/city/country, destination code/city/country
 def get_online_plane_data(url):
 
-    # get the html of the page
-    results_html = asession.run(
-        lambda: render_page(url),
-    )[0].html
-
     try:
-        # CURRENTLY BROKEN, this div is not unique 
-        # plane_type = results_html.find('div.flightPageData', first=True).text
 
+        # get the html of the page
+        results_html = asession.run(
+            lambda: render_page(url),
+        )[0].html
+
+        # find plane type info
+        # plane = results_html.find('.flightPageDataLabel', containing='Aircraft Type')
+        # plane_type = plane.find('.flightPageData', first=True).text
+        # print("plane type === ", plane_type)
+
+        # find origin info
         origin = results_html.find('.flightPageSummaryOrigin', first=True)
         origin_code = origin.find('.flightPageSummaryAirportCode', first=True).text
         origin_place = origin.find('.flightPageSummaryCity', first=True).text
         origin_city, origin_country = map(str.strip, origin_place.split(','))
 
+        # find destination info
         dest = results_html.find('.flightPageSummaryDestination', first=True)
         dest_code = dest.find('.flightPageSummaryAirportCode', first=True).text
         dest_place = dest.find('.flightPageSummaryCity', first=True).text
@@ -55,7 +60,9 @@ def get_online_plane_data(url):
             dest_country = "United States"
         
         return origin_code, origin_city, origin_country, dest_code, dest_city, dest_country
+    
     except:
+        print("ERROR - unable to scrape data from", url)
         return None, None, None, None, None, None
 
 
@@ -68,6 +75,8 @@ def get_pi_data():
 # accesses data from the Raspberry PI data for a specific plane
 # data -- plane id hex, flight number, latitude, longitude, altitude, ground speed, roll, true heading, squawk, nav mode 
 def get_pi_plane_data(a):
+
+    # get variables
     plane_id = a.get('hex')
     alt = a.get('alt_baro')
     speed = a.get('gs')
@@ -90,7 +99,7 @@ def main():
         # get the current data from the PI
         pi_data = get_pi_data()
 
-        print("***this batch has ", len(pi_data['aircraft']), " planes...")
+        print("*** this batch has ", len(pi_data['aircraft']), " planes ...")
 
         # for each plane, extract the relevant data and send it off
         for a in pi_data['aircraft']:
