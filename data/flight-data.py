@@ -63,7 +63,7 @@ def get_online_plane_data(url):
     
     except:
         print("ERROR - unable to scrape data from", url)
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, None
 
 
 # accesses data from the Raspberry PI site  
