@@ -1,6 +1,4 @@
-import json, time, os
-from contextlib import closing
-from urllib.request import urlopen, URLError
+import time, os, aiohttp, asyncio
 from requests_html import AsyncHTMLSession
 asession = AsyncHTMLSession()
 from dotenv import load_dotenv
@@ -30,8 +28,8 @@ async def render_page(url):
 # data -- plane type, origin airport code/city/country, destination code/city/country
 def get_online_plane_data(url):
 
+    # get html from url
     try:
-
         # get the html of the page
         results_html = asession.run(
             lambda: render_page(url),
@@ -67,9 +65,18 @@ def get_online_plane_data(url):
 
 
 # accesses data from the Raspberry PI site  
-def get_pi_data():
-    with closing(urlopen(PI_URL, None, 5.0)) as aircraft_file:
-        return json.load(aircraft_file)
+async def get_pi_data():
+    try:
+        # open an aiohttp session to get page
+        session = aiohttp.ClientSession()
+        async with session.get(PI_URL) as resp:
+            json_data = await resp.json()
+        await session.close()
+        return json_data
+    
+    except:
+        print("ERROR - unable to get PI data")
+        return None
 
 
 # accesses data from the Raspberry PI data for a specific plane
@@ -94,10 +101,16 @@ def get_pi_plane_data(a):
 
 def main():
 
+    # loop through batches of planes
     while 1:
 
         # get the current data from the PI
-        pi_data = get_pi_data()
+        loop = asyncio.get_event_loop()
+        pi_data = loop.run_until_complete(get_pi_data())
+
+        # if there's no PI data, skip this batch
+        if (not pi_data):
+            continue
 
         print("*** this batch has ", len(pi_data['aircraft']), " planes ...")
 
@@ -126,6 +139,7 @@ def main():
             # print(resp)
             # print(resp.text)
 
+        # wait 5 seconds until the next batch
         print('=' * 80)
         time.sleep(5)
 
