@@ -1,4 +1,4 @@
-import time, os, aiohttp, asyncio
+import time, os, requests
 from requests_html import AsyncHTMLSession
 asession = AsyncHTMLSession()
 from dotenv import load_dotenv
@@ -40,24 +40,24 @@ def get_online_plane_data(url):
         plane_type = plane_type[:plane_type.find('(')].rstrip()
 
         # find origin info
-        origin = results_html.find('.flightPageSummaryOrigin', first=True)
-        origin_code = origin.find('.flightPageSummaryAirportCode', first=True).text
-        origin_place = origin.find('.flightPageSummaryCity', first=True).text
-        origin_city, origin_country = map(str.strip, origin_place.split(','))
+        ori = results_html.find('.flightPageSummaryOrigin', first=True)
+        ori_code = ori.find('.flightPageSummaryAirportCode', first=True).text
+        ori_place = ori.find('.flightPageSummaryCity', first=True).text
+        ori_city, ori_country = map(str.strip, ori_place.split(','))
 
         # find destination info
-        dest = results_html.find('.flightPageSummaryDestination', first=True)
-        dest_code = dest.find('.flightPageSummaryAirportCode', first=True).text
-        dest_place = dest.find('.flightPageSummaryCity', first=True).text
-        dest_city, dest_country = map(str.strip, dest_place.split(','))
+        des = results_html.find('.flightPageSummaryDestination', first=True)
+        des_code = des.find('.flightPageSummaryAirportCode', first=True).text
+        des_place = des.find('.flightPageSummaryCity', first=True).text
+        des_city, des_country = map(str.strip, des_place.split(','))
 
         # replace states with "United States"
-        if (origin_country in states):
-            origin_country = "United States"
-        if (dest_country in states):
-            dest_country = "United States"
+        if (ori_country in states):
+            ori_country = "United States"
+        if (des_country in states):
+            des_country = "United States"
         
-        return plane_type, origin_code, origin_city, origin_country, dest_code, dest_city, dest_country
+        return plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country
     
     except:
         print("ERROR - unable to scrape data from", url)
@@ -65,14 +65,12 @@ def get_online_plane_data(url):
 
 
 # accesses data from the Raspberry PI site  
-async def get_pi_data():
+def get_pi_data():
     try:
-        # open an aiohttp session to get page
-        session = aiohttp.ClientSession()
-        async with session.get(PI_URL) as resp:
-            json_data = await resp.json()
-        await session.close()
-        return json_data
+        # get JSON data from the url
+        response = requests.get(url=PI_URL)
+        pi_data = response.json()
+        return pi_data
     
     except:
         print("ERROR - unable to get PI data")
@@ -99,14 +97,25 @@ def get_pi_plane_data(a):
     return plane_id, alt, speed, roll, heading, squawk, nav_modes
 
 
+# sends data to the server
+def send_data(flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes, plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country):
+    
+    # format data correctly 
+    server_data = {key: value for key, value in locals().items() if key != "server_data"}
+
+    # send data to the server
+    response = requests.post(SERVER_URL, params=server_data)
+    print(response)
+    print(response.text)
+
+
 def main():
 
     # loop through batches of planes
     while 1:
 
         # get the current data from the PI
-        loop = asyncio.get_event_loop()
-        pi_data = loop.run_until_complete(get_pi_data())
+        pi_data = get_pi_data()
 
         # if there's no PI data, skip this batch
         if (not pi_data):
@@ -117,30 +126,29 @@ def main():
         # for each plane, extract the relevant data and send it off
         for a in pi_data['aircraft']:
 
-            flight_number = a.get('flight')
+            flight_num = a.get('flight')
             lat = a.get('lat')
             lon = a.get('lon')
 
             # if there's not all of flight number/lat/lon, skip this plane
-            if (not (flight_number and lat and lon)):
+            if (not (flight_num and lat and lon)):
                 continue
 
             # get the plane data from the PI
             plane_id, alt, speed, roll, heading, squawk, nav_modes = get_pi_plane_data(a)
-            print("PI --- ", flight_number, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes)
+            print("PI --- ", flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes)
 
             # get the plane data from online
-            plane_type, origin_code, origin_city, origin_country, dest_code, dest_city, dest_country = get_online_plane_data(FLIGHT_URL + str(flight_number))
-            print("ON --- ", plane_type, origin_code, origin_city, origin_country, dest_code, dest_city, dest_country)
+            plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country = get_online_plane_data(FLIGHT_URL + str(flight_num))
+            print("ON --- ", plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
 
             # send data to the server
-            # userdata = {"flight": flight, "lat": lat, "lon": lon}
-            # resp = requests.post(SERVER_URL, params=userdata)
-            # print(resp)
-            # print(resp.text)
+            # send_data(flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes, plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
 
         # wait 5 seconds until the next batch
         print('=' * 80)
         time.sleep(5)
 
-main()
+# main()
+
+send_data("RPA4556", "a0144e", "43.452464", "-79.164799", "12125", "333.4", "0.2", "124.3", "0527", "autopilot vnav tcas", "Embraer ERJ 175", "YYZ", "Toronto", "Canada", "LGA", "New York", "United States")
