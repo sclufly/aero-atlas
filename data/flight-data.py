@@ -88,7 +88,7 @@ def get_pi_plane_data(a):
     alt = a.get('alt_baro')
     speed = a.get('gs')
     roll = a.get('roll')
-    heading = a.get('true_heading')
+    heading = a.get('mag_heading')
     squawk = a.get('squawk')
     nav_modes = a.get('nav_modes')
 
