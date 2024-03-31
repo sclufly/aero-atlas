@@ -65,34 +65,25 @@
         // general query: insert into
         private function insertInto( $table, $data ){
 
-            echo "in insertInto";
-
             // create query
             $cols = implode(', ', array_keys($data));
             $vals = ':' . implode(', :', array_keys($data));
             $query = $this->prepare( "INSERT INTO $table ($cols) VALUES ($vals)" );
 
-            echo "query created";
-
             // bind parameters
             $boundParams = array();
             foreach ($data as $column => $value) {
-                if (!$query->bindParam(":$column", $value)) {
+                if (!$query->bindParam(":".$column, $value)) {
                     throw new Exception("Failed to bind parameter in insertInto. Parameter: :$column");
                 }
                 $boundParams[":$column"] = $value;
             }
-
-            echo "param binding done \n";
-            echo $query."\n";
 
             // execute query
             if ( !$query->execute($boundParams) ){
                 $arr = $query->errorInfo();
                 throw new Exception( "Failed to execute query in insertInto. Query: ".$query ); 
             }
-
-            echo "execution over";
 
             $query->closeCursor();
         }
@@ -107,22 +98,10 @@
             if ( sizeof ( $rowArray ) == 0 ){
 
                 // add a new row to aero_airplane_type
-                $query = "INSERT INTO aero_airplane_type (plane_type) VALUES (:p1)";
-
-                $query = $this->prepare( $query );
-
-                // bind parameters
-                if ( !($query->bindParam( ':p1', $plane_type ) )){
-                    throw new Exception( "Failed to bind parameters in insertAeroAirplaneType. Query: ".$query );
-                }
-
-                // execute query
-                if ( !$query->execute() ){
-                    $arr = $query->errorInfo();
-                    throw new Exception( "Failed to execute query in insertAeroAirplaneType. Query: ".$query ); 
-                }
-
-                $query->closeCursor();
+                $data = array(
+                    "plane_type" => $plane_type
+                );
+                $this->insertInto( "aero_airplane_type", $data);
             }
         }
 
@@ -136,28 +115,11 @@
             if ( sizeof( $rowArray ) == 0 ){
 
                 // add a new row to aero_airplane
-                // $data = array(
-                //     "plane_id" => $plane_id,
-                //     "plane_type" => $plane_type
-                // );
-                // $this->insertInto( "aero_airplane", $data);
-
-                $query = "INSERT INTO aero_airplane (plane_id, plane_type) VALUES (:p1, :p2)";
-
-                $query = $this->prepare( $query );
-
-                // bind parameters
-                if ( !($query->bindParam( ':p1', $plane_id ) ) || !($query->bindParam( ':p2', $plane_type ) )){
-                    throw new Exception( "Failed to bind parameters in insertAeroAirplane. Query: ".$query );
-                }
-
-                // execute query
-                if ( !$query->execute() ){
-                    $arr = $query->errorInfo();
-                    throw new Exception( "Failed to execute query in insertAeroAirplane. Query: ".$query ); 
-                }
-
-                $query->closeCursor();
+                $data = array(
+                    "plane_id" => $plane_id,
+                    "plane_type" => $plane_type
+                );
+                $this->insertInto( "aero_airplane", $data);
 
                 // insert into aero_airplane_type
                 $this->insertAeroAirplaneType( $plane_type );
