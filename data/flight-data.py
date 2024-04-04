@@ -1,4 +1,5 @@
 import time, os, requests
+from datetime import datetime, timedelta
 from requests_html import AsyncHTMLSession
 asession = AsyncHTMLSession()
 from dotenv import load_dotenv
@@ -13,6 +14,7 @@ FLIGHT_URL=os.getenv('FLIGHT_URL')
 
 
 # store constants
+seen_planes = {}
 states = ['AL', 'AK', 'AS', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FM', 'FL', 'GA', 'GU', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MH', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'MP', 'OH', 'OK', 'OR', 'PW', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VI', 'VA', 'WA', 'WV', 'WI', 'WY'];
 plane_type_xpath = '//div[contains(@class, "flightPageDataRow")]//div[contains(@class, "flightPageDataLabel") and contains(., "Aircraft Type")]/following-sibling::div[@class="flightPageData"]'
 
@@ -26,7 +28,15 @@ async def render_page(url):
 
 # scrapes data from a FlightAware site
 # data -- plane type, origin airport code/city/country, destination code/city/country
-def get_online_plane_data(url):
+def get_online_plane_data(flight_num):
+
+    # check if this plane has been seen in the last hour, and avoid web scraping if it has
+    if ((flight_num in seen_planes) and (datetime.now() - seen_planes[flight_num][-1] < timedelta(hours=1))):
+        plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country, curr_time = seen_planes[flight_num]
+        return plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country
+    
+    # construct url
+    url = FLIGHT_URL + str(flight_num)
 
     # get html from url
     try:
@@ -56,7 +66,11 @@ def get_online_plane_data(url):
             ori_country = "United States"
         if (des_country in states):
             des_country = "United States"
-        
+
+        # add the data to the seen planes hash map
+        seen_planes[flight_num] = [plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country, datetime.now()]
+
+        # return the data
         return plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country
     
     except:
@@ -139,7 +153,7 @@ def main():
             print("PI --- ", flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes)
 
             # get the plane data from online
-            plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country = get_online_plane_data(FLIGHT_URL + str(flight_num))
+            plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country = get_online_plane_data(flight_num)
             print("ON --- ", plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
 
             # send data to the server
@@ -149,6 +163,6 @@ def main():
         print('=' * 80)
         time.sleep(5)
 
-# main()
+main()
 
-send_data("RPA4556", "a0144e", "43.452464", "-79.164799", "12125", "333.4", "0.2", "124.3", "0527", "autopilot vnav tcas", "Embraer ERJ 175", "YYZ", "Toronto", "Canada", "LGA", "New York", "United States")
+# send_data("RPA4556", "a0144e", "43.452464", "-79.164799", "12125", "333.4", "0.2", "124.3", "0527", "autopilot vnav tcas", "Embraer ERJ 175", "YYZ", "Toronto", "Canada", "LGA", "New York", "United States")
