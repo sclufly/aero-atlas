@@ -159,9 +159,9 @@ def main():
             # send data to the server
             # send_data(flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes, plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
 
-        # wait 5 seconds until the next batch
+        # wait n seconds until the next batch
         print('=' * 80)
-        time.sleep(5)
+        time.sleep(10)
 
 main()
 
