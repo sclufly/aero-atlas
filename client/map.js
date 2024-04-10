@@ -22,8 +22,8 @@ var testData = {
 
 var lon, lat, c;
 for(var i=0; i<500; i++) {
-    lon = Math.random() * 360 - 180; // Random longitude between -180 and 180
-    lat = Math.random() * 170 - 85;  // Random latitude between -85 and 85
+    lon = Math.random() * (-79 + 80) - 80; // Random longitude between -180 and 180
+    lat = Math.random() * (44 - 43.5) + 43.5;  // Random latitude between -85 and 85
     c = Math.floor(Math.random() * 50); // Random count between 0 and 49
     testData.data.push({ lonlat: [lon, lat], count: c });
 }
