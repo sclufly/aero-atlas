@@ -1,17 +1,22 @@
 import './map.css';
-import {Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM';
+import {Map, View} from 'ol';
+import StadiaMaps from 'ol/source/StadiaMaps.js';
+
+const tileLayer = new TileLayer({
+    source: new StadiaMaps({
+        layer: 'alidade_satellite',
+    }),
+});
+
+const view = new View({
+    center: [-8800000, 5400000],
+    zoom: 7
+});
+
 
 const map = new Map({
-  target: 'map',
-  layers: [
-    new TileLayer({
-      source: new OSM()
-    })
-  ],
-  view: new View({
-    center: [0, 0],
-    zoom: 2
-  })
+  target: 'map-container',
+  layers: [tileLayer],
+  view: view
 });
