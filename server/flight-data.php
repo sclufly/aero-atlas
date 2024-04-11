@@ -119,21 +119,25 @@
         // insert data into aero_airplane
         private function insertAeroAirplane( $plane_id, $plane_type ) {
 
-            // get current rows with this plane_id
-            $rowArray = $this->selectAll( "aero_airplane", "plane_id", $plane_id );
+            // only add to the table if plane_type is not null
+            if ( $plane_type ) {
 
-            // if current plane_id is not already in the table
-            if ( sizeof( $rowArray ) == 0 ) {
+                // get current rows with this plane_id
+                $rowArray = $this->selectAll( "aero_airplane", "plane_id", $plane_id );
 
-                // add a new row to aero_airplane
-                $data = array(
-                    "plane_id" => $plane_id,
-                    "plane_type" => $plane_type
-                );
-                $this->insertInto( "aero_airplane", $data );
+                // if current plane_id is not already in the table
+                if ( sizeof( $rowArray ) == 0 ) {
 
-                // insert into aero_airplane_type
-                $this->insertAeroAirplaneType( $plane_type );
+                    // add a new row to aero_airplane
+                    $data = array(
+                        "plane_id" => $plane_id,
+                        "plane_type" => $plane_type
+                    );
+                    $this->insertInto( "aero_airplane", $data );
+
+                    // insert into aero_airplane_type
+                    $this->insertAeroAirplaneType( $plane_type );
+                }
             }
         }
 
@@ -238,7 +242,7 @@
             $trip_id = $this->insertAeroTrip( $data["plane_id"], $data["flight_num"], 
                                               $data["ori_code"], $data["ori_city"], $data["ori_country"], 
                                               $data["des_code"], $data["des_city"], $data["des_country"] );
-            echo $trip_id."\n";
+            // echo $trip_id."\n";
 
             // 3. insert data into aero_trip_data
             $this->insertAeroTripData( $trip_id, $data["lat"], $data["lon"], $data["alt"], 

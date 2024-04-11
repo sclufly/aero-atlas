@@ -7,7 +7,7 @@ load_dotenv()
 
 
 # store env variables
-PI_URL = os.getenv('MARKHAM_PI_URL')
+PI_URL = os.getenv('WATERLOO_PI_URL')
 SERVER_URL=os.getenv('SERVER_URL')
 HEADERS=os.getenv('HEADERS')
 FLIGHT_URL=os.getenv('FLIGHT_URL')
@@ -157,7 +157,7 @@ def main():
             print("ON --- ", plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
 
             # send data to the server
-            # send_data(flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes, plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
+            send_data(flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes, plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
 
         # wait n seconds until the next batch
         print('=' * 80)
@@ -165,4 +165,4 @@ def main():
 
 main()
 
-# send_data("RPA4556", "a0144e", "43.452464", "-79.164799", "12125", "333.4", "0.2", "124.3", "0527", "autopilot vnav tcas", "Embraer ERJ 175", "YYZ", "Toronto", "Canada", "LGA", "New York", "United States")
+# send_data("RPA4556", "00apr11id", "43.452464", "-79.164799", "12125", "333.4", "0.2", "124.3", "0527", "autopilot vnav tcas", "test", "YYZ", "Toronto", "Canada", "LGA", "New York", "United States")
