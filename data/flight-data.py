@@ -157,7 +157,11 @@ def main():
             print("ON --- ", plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
 
             # send data to the server
-            send_data(flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes, plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
+            try:
+                send_data(flight_num, plane_id, lat, lon, alt, speed, roll, heading, squawk, nav_modes, plane_type, ori_code, ori_city, ori_country, des_code, des_city, des_country)
+            except:
+                print("ERROR - unable to send data to the server")
+                continue
 
         # wait n seconds until the next batch
         print('=' * 80)
