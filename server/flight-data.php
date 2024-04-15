@@ -49,7 +49,7 @@
             if ( $max == "" ) {
                 $query = $this->prepare( "SELECT * FROM $table WHERE $col = :v" );
             } else {
-                $query = $this->prepare( "SELECT trip_id, MAX($max) FROM $table WHERE $col = :v" );
+                $query = $this->prepare( "SELECT trip_id, $max FROM $table WHERE $col = :v ORDER BY $max DESC LIMIT 1" );
             }
 
             // bind parameters
@@ -165,7 +165,7 @@
 
             // get the value of the latest start_time with this plane_id, as well as the trip_id
             $colArray = $this->selectAll( "aero_trip", "plane_id", $plane_id, "start_time" );
-            $latest_start_time = $colArray["MAX(start_time)"];
+            $latest_start_time = $colArray["start_time"];
             $trip_id = $colArray["trip_id"];
 
             // get current time
@@ -242,7 +242,7 @@
             $trip_id = $this->insertAeroTrip( $data["plane_id"], $data["flight_num"], 
                                               $data["ori_code"], $data["ori_city"], $data["ori_country"], 
                                               $data["des_code"], $data["des_city"], $data["des_country"] );
-            // echo $trip_id."\n";
+            echo $trip_id."\n";
 
             // 3. insert data into aero_trip_data
             $this->insertAeroTripData( $trip_id, $data["lat"], $data["lon"], $data["alt"], 
