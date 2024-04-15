@@ -1,19 +1,20 @@
 import './map.css';
 import TileLayer from 'ol/layer/Tile';
 import {Map, View} from 'ol';
-import StadiaMaps from 'ol/source/StadiaMaps.js';
 
 import Heatmap from 'ol/layer/Heatmap';
 import Vector from 'ol/source/Vector';
+import XYZ from 'ol/source/XYZ';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
 
-const tileLayer = new TileLayer({
-    source: new StadiaMaps({
-        layer: 'alidade_satellite',
-    }),
-});
+var tileLayer = new TileLayer({
+    source: new XYZ({
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      maxZoom: 19
+    })
+  });
 
 var testData = {
     max: 50,
@@ -53,7 +54,7 @@ const view = new View({
 });
 
 const map = new Map({
-  target: 'map-container',
+  target: 'map',
   layers: [tileLayer, heatmapLayer],
   view: view
 });

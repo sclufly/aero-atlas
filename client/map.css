@@ -1,12 +1,161 @@
 @import "node_modules/ol/ol.css";
 
 html, body {
-  margin: 0;
-  height: 100%;
+    margin: 0;
+    height: 100%;
 }
-#map-container {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
+
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(38, 60, 81);
+}
+
+#header {
+    text-align: left;
+    height: auto;
+    margin: 20px 0px 40px 30px;
+}
+
+h1 {
+    font-family: "Rubik Maps", system-ui;
+    font-size: 100px;
+    font-weight: 400;
+    font-style: normal;
+    color: #ffffff;
+    margin: 0;
+}
+
+h2 {
+    font-family: "Rubik Mono One", monospace;
+    font-size: 20px;
+    font-weight: 400;
+    font-style: normal;
+    color: #ffffff;
+    margin: 0;
+    margin-top: 10px;
+}
+
+#map-div {
+    width: 95vw;
+    margin: auto;
+}
+
+#map {
+    flex: 1;
+    position: relative;
+    height: 80vh;
+}
+
+.outerBevel {
+    box-shadow: 4px 6px 12px 0 black;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgb(109, 84, 58) rgb(24, 19, 13) rgb(24, 19, 13) rgb(109, 84, 58);
+}
+
+.flatSurface {
+    border: 12px solid rgb(65, 40, 16);
+}
+
+.innerBevel {
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgb(24, 19, 13) rgb(109, 84, 58) rgb(109, 84, 58) rgb(24, 19, 13);
+}
+
+.plane {
+    position: absolute;
+    display: flex;
+    margin: 100px auto;
+    animation: flight 7s forwards;
+}
+
+#plane-object {
+    width: 126px;
+    height: 43px;
+}
+
+.plane h2 {
+    animation: plane-stutter 5s forwards;
+}
+
+.plane svg {
+    animation-name: plane-stutter, disappear;
+    animation-duration: 5s, 15s;
+    animation-fill-mode: forwards, forwards;
+}
+
+.smoke1 {
+    animation: smoke 1s forwards 6;
+}
+
+.smoke2 {
+    animation: smoke 1s forwards 7;
+    animation-delay: 0.4s;
+}
+
+.smoke3 {
+    animation: smoke 1s forwards 6;
+    animation-delay: 0.2s;
+}
+
+.smoke4 {
+    animation: smoke 1s forwards 7;
+    animation-delay: 0.7s;
+}
+
+.path {
+    animation: draw 0.2s linear forwards 43;
+}
+
+@keyframes draw {
+    50% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes smoke {
+    0% {
+        transform: translateX(100%);
+    }
+    
+    70% {
+        opacity: 0.8;
+    }
+    
+    100% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+@keyframes plane-stutter {
+    0% {
+        transform: translateY(0%);
+    }
+
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes flight {
+    0% {
+        transform: translateX(-100%);
+    }
+    
+    100% {
+        transform: translateX(3%);
+    }
+}
+
+@keyframes disappear {
+    from {
+        opacity: 1;
+    }
+  
+    to {
+        opacity: 0;
+    }
 }
