@@ -1,13 +1,22 @@
 import './map.css';
-import TileLayer from 'ol/layer/Tile';
-import {Map, View} from 'ol';
+import flightsData from './fake_data.json';
 
+import TileLayer from 'ol/layer/Tile';
+import {Map, View, Feature} from 'ol';
 import Heatmap from 'ol/layer/Heatmap';
 import Vector from 'ol/source/Vector';
 import XYZ from 'ol/source/XYZ';
-import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import { fromLonLat } from 'ol/proj';
+import {fromLonLat} from 'ol/proj';
+import LineString from 'ol/geom/LineString.js';
+import {Vector as VectorLayer} from 'ol/layer.js';
+import {getVectorContext} from 'ol/render.js';
+import {getWidth} from 'ol/extent.js';
+import {Stroke, Style} from 'ol/style.js';
+
+
+
+// === HEATMAP ===
 
 var tileLayer = new TileLayer({
     source: new XYZ({
@@ -48,13 +57,160 @@ var heatmapLayer = new Heatmap({
     }
 });
 
+
+
+// === MAP BASE ===
+
 const view = new View({
     center: [-8800000, 5400000],
     zoom: 7
 });
 
 const map = new Map({
-  target: 'map',
-  layers: [tileLayer, heatmapLayer],
-  view: view
+    target: 'map',
+    layers: [tileLayer, heatmapLayer],
+    view: view
 });
+
+
+
+// === FLIGHT DATA ===
+
+const style = new Style({
+    stroke: new Stroke({
+        color: '#EAE911',
+        width: 4,
+    }),
+});
+  
+const flightsSource = new Vector({
+    loader: function () {
+        for (let i = 0; i < flightsData.length; i++) {
+            const flight = flightsData[i];
+            const ori = flight.ori;
+            const des = flight.des;
+            const inter = flight.inter || [];
+            
+            let allPoints = [ori, ...inter, des];
+            let allGeometries = [];
+
+            // Iterate over each pair of consecutive points
+            for (let j = 0; j < allPoints.length - 1; j++) {
+                const fromPoint = allPoints[j];
+                const toPoint = allPoints[j + 1];
+
+                // Create an arc circle between the two locations
+                const arcGenerator = new arc.GreatCircle(
+                    {x: fromPoint[1], y: fromPoint[0]},
+                    {x: toPoint[1], y: toPoint[0]}
+                );
+
+                // Generate the arc line
+                const arcLine = arcGenerator.Arc(100, {offset: 10});
+
+                // Add arc coordinates to the concatenated points array
+                allGeometries = allGeometries.concat(arcLine.geometries);
+            }
+
+            // // create an arc circle between the two locations
+            // const arcGenerator = new arc.GreatCircle(
+            //     {x: ori[1], y: ori[0]},
+            //     {x: des[1], y: des[0]},
+            // );
+
+            // const arcGenerator2 = new arc.GreatCircle(
+            //     {x: -123.182, y: 49.195},
+            //     {x: -63.499, y: 44.64},
+            // );
+
+            // const arcLine = arcGenerator.Arc(100, {offset: 10});
+            // const arcLine2 = arcGenerator2.Arc(100, {offset: 10});
+            // allGeometries = arcLine.geometries.concat(arcLine2.geometries);
+
+            // paths which cross the -180°/+180° meridian are split
+            // into two sections which will be animated sequentially
+            const features = [];
+            allGeometries.map(function (geometry) {
+                const line = new LineString(geometry.coords);
+                line.transform('EPSG:4326', 'EPSG:3857');
+
+                features.push(
+                new Feature({
+                    geometry: line,
+                    finished: false,
+                }),
+                );
+            });
+            // add the features with a delay so that the animation
+            // for all features does not start at the same time
+            addLater(features, i * 50);
+        }
+        tileLayer.on('postrender', animateFlights);
+    },
+});
+  
+const flightsLayer = new VectorLayer({
+    source: flightsSource,
+    style: function (feature) {
+        // if the animation is still active for a feature, do not
+        // render the feature with the layer style
+        if (feature.get('finished')) {
+            return style;
+        }
+        return null;
+    },
+});
+  
+map.addLayer(flightsLayer);
+  
+const pointsPerMs = 0.02;
+function animateFlights(event) {
+    const vectorContext = getVectorContext(event);
+    const frameState = event.frameState;
+    vectorContext.setStyle(style);
+
+    const features = flightsSource.getFeatures();
+    for (let i = 0; i < features.length; i++) {
+        const feature = features[i];
+        if (!feature.get('finished')) {
+            // only draw the lines for which the animation has not finished yet
+            const coords = feature.getGeometry().getCoordinates();
+            const elapsedTime = frameState.time - feature.get('start');
+            if (elapsedTime >= 0) {
+                const elapsedPoints = elapsedTime * pointsPerMs;
+        
+                if (elapsedPoints >= coords.length) {
+                    feature.set('finished', true);
+                }
+        
+                const maxIndex = Math.min(elapsedPoints, coords.length);
+                const currentLine = new LineString(coords.slice(0, maxIndex));
+        
+                // animation is needed in the current and nearest adjacent wrapped world
+                const worldWidth = getWidth(map.getView().getProjection().getExtent());
+                const offset = Math.floor(map.getView().getCenter()[0] / worldWidth);
+        
+                // directly draw the lines with the vector context
+                currentLine.translate(offset * worldWidth, 0);
+                vectorContext.drawGeometry(currentLine);
+                currentLine.translate(worldWidth, 0);
+                vectorContext.drawGeometry(currentLine);
+            }
+        }
+    }
+    // tell OpenLayers to continue the animation
+    map.render();
+}
+  
+function addLater(features, timeout) {
+    window.setTimeout(function () {
+        let start = Date.now();
+        features.forEach(function (feature) {
+            feature.set('start', start);
+            flightsSource.addFeature(feature);
+            const duration =
+            (feature.getGeometry().getCoordinates().length - 1) / pointsPerMs;
+            start += duration;
+        });
+    }, timeout);
+}
