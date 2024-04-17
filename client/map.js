@@ -76,9 +76,30 @@ const map = new Map({
 
 // === FLIGHT DATA ===
 
-const style = new Style({
+const oriDesStyle = new Style({
     stroke: new Stroke({
-        color: '#EAE911',
+        color: '#ffffff',
+        width: 4,
+    }),
+});
+
+const oriDesFinishedStyle = new Style({
+    stroke: new Stroke({
+        color: '#979ea1',
+        width: 4,
+    }),
+});
+
+const interStyle = new Style({
+    stroke: new Stroke({
+        color: '#02e7f7',
+        width: 4,
+    }),
+});
+
+const interFinishedStyle = new Style({
+    stroke: new Stroke({
+        color: '#02a9f7',
         width: 4,
     }),
 });
@@ -112,38 +133,26 @@ const flightsSource = new Vector({
                 allGeometries = allGeometries.concat(arcLine.geometries);
             }
 
-            // // create an arc circle between the two locations
-            // const arcGenerator = new arc.GreatCircle(
-            //     {x: ori[1], y: ori[0]},
-            //     {x: des[1], y: des[0]},
-            // );
-
-            // const arcGenerator2 = new arc.GreatCircle(
-            //     {x: -123.182, y: 49.195},
-            //     {x: -63.499, y: 44.64},
-            // );
-
-            // const arcLine = arcGenerator.Arc(100, {offset: 10});
-            // const arcLine2 = arcGenerator2.Arc(100, {offset: 10});
-            // allGeometries = arcLine.geometries.concat(arcLine2.geometries);
-
             // paths which cross the -180°/+180° meridian are split
             // into two sections which will be animated sequentially
             const features = [];
-            allGeometries.map(function (geometry) {
+            allGeometries.map(function (geometry, i) {
                 const line = new LineString(geometry.coords);
                 line.transform('EPSG:4326', 'EPSG:3857');
+                const isInter = (i !== 0 && i !== allGeometries.length - 1);
 
                 features.push(
                 new Feature({
                     geometry: line,
                     finished: false,
+                    segmentCount: allGeometries.length,
+                    isInter: isInter, 
                 }),
                 );
             });
             // add the features with a delay so that the animation
             // for all features does not start at the same time
-            addLater(features, i * 50);
+            addLater(features, i * 500);
         }
         tileLayer.on('postrender', animateFlights);
     },
@@ -155,7 +164,11 @@ const flightsLayer = new VectorLayer({
         // if the animation is still active for a feature, do not
         // render the feature with the layer style
         if (feature.get('finished')) {
-            return style;
+            if (feature.get('isInter')) {
+                return interFinishedStyle;
+            } else {
+                return oriDesFinishedStyle;
+            }
         }
         return null;
     },
@@ -167,17 +180,27 @@ const pointsPerMs = 0.02;
 function animateFlights(event) {
     const vectorContext = getVectorContext(event);
     const frameState = event.frameState;
-    vectorContext.setStyle(style);
-
     const features = flightsSource.getFeatures();
+
     for (let i = 0; i < features.length; i++) {
+
         const feature = features[i];
+
+        if (feature.get('isInter')) {
+            vectorContext.setStyle(interStyle);
+        } else {
+            vectorContext.setStyle(oriDesStyle);
+        }
+
         if (!feature.get('finished')) {
+
             // only draw the lines for which the animation has not finished yet
             const coords = feature.getGeometry().getCoordinates();
             const elapsedTime = frameState.time - feature.get('start');
+            
             if (elapsedTime >= 0) {
-                const elapsedPoints = elapsedTime * pointsPerMs;
+                const segmentCount = feature.get('segmentCount');
+                const elapsedPoints = elapsedTime * pointsPerMs * segmentCount;
         
                 if (elapsedPoints >= coords.length) {
                     feature.set('finished', true);
@@ -198,18 +221,21 @@ function animateFlights(event) {
             }
         }
     }
-    // tell OpenLayers to continue the animation
-    map.render();
+    // continue the animation if there's at least one feature that's not finished
+    if (!features.every(feature => feature.get('finished'))) {
+        map.render();
+    }
 }
   
 function addLater(features, timeout) {
     window.setTimeout(function () {
         let start = Date.now();
+
         features.forEach(function (feature) {
             feature.set('start', start);
             flightsSource.addFeature(feature);
-            const duration =
-            (feature.getGeometry().getCoordinates().length - 1) / pointsPerMs;
+            const segmentSum = feature.getGeometry().getCoordinates().length - 1;
+            const duration = segmentSum / (pointsPerMs * features.length);
             start += duration;
         });
     }, timeout);
