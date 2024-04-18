@@ -180,7 +180,7 @@
 
                 // if the latest start_time was more than 5 hours ago, this is a new trip
                 $diffSeconds = $first->getTimestamp() - $last->getTimestamp();
-                if ( $diffSeconds >= 1800 ) {
+                if ( $diffSeconds >= 18000 ) {
                     $isNewTrip = true;
                 }
             }
