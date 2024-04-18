@@ -178,9 +178,9 @@
                 $first = new DateTime( $start_time );
                 $last = new DateTime( $latest_start_time );
 
-                // if the latest start_time was more than 1 hour ago, this is a new trip
+                // if the latest start_time was more than 5 hours ago, this is a new trip
                 $diffSeconds = $first->getTimestamp() - $last->getTimestamp();
-                if ( $diffSeconds >= 3600 ) {
+                if ( $diffSeconds >= 1800 ) {
                     $isNewTrip = true;
                 }
             }
