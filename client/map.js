@@ -12,18 +12,10 @@ import LineString from 'ol/geom/LineString.js';
 import {Vector as VectorLayer} from 'ol/layer.js';
 import {getVectorContext} from 'ol/render.js';
 import {getWidth} from 'ol/extent.js';
-import {Stroke, Style} from 'ol/style.js';
-
+import {Stroke, Style, Circle as CircleStyle, Fill, Icon} from 'ol/style.js';
 
 
 // === HEATMAP ===
-
-var tileLayer = new TileLayer({
-    source: new XYZ({
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      maxZoom: 19
-    })
-  });
 
 var testData = {
     max: 50,
@@ -56,16 +48,47 @@ var heatmapLayer = new Heatmap({
         return feature.get('weight'); // Get weight from each feature
     }
 });
+heatmapLayer.setVisible(false);
 
 
 
 // === MAP BASE ===
+
+// button functionality for changing the current map style
+const mapStyleButton = document.getElementById('map-style-button');
+const mapStyles = ["World_Topo_Map", "World_Imagery", "World_Terrain_Base"];
+let currentMapStyle = mapStyles[0];
+
+mapStyleButton.addEventListener('click', function () {
+    const currentIndex = mapStyles.indexOf(currentMapStyle); 
+    const nextIndex = (currentIndex + 1) % mapStyles.length;
+    currentMapStyle = mapStyles[nextIndex];
+    tileLayer.getSource().setUrl(`https://server.arcgisonline.com/ArcGIS/rest/services/${currentMapStyle}/MapServer/tile/{z}/{y}/{x}`);
+});
+
+// map style layer
+var tileLayer = new TileLayer({
+    source: new XYZ({
+      url: `https://server.arcgisonline.com/ArcGIS/rest/services/${currentMapStyle}/MapServer/tile/{z}/{y}/{x}`,
+      maxZoom: 19
+    })
+});
+
+// button functionality for showing/hiding the heatmap layer
+const heatmapButton = document.getElementById('heatmap-button');
+let showHeatmap = false;
+
+heatmapButton.addEventListener('click', function () {
+    showHeatmap = !showHeatmap;
+    heatmapLayer.setVisible(showHeatmap);
+});
 
 const view = new View({
     center: [-8800000, 5400000],
     zoom: 7
 });
 
+// map object
 const map = new Map({
     target: 'map',
     layers: [tileLayer, heatmapLayer],
@@ -92,18 +115,31 @@ const oriDesFinishedStyle = new Style({
 
 const interStyle = new Style({
     stroke: new Stroke({
-        color: '#02e7f7',
+        color: '#f26716',
         width: 4,
     }),
 });
 
 const interFinishedStyle = new Style({
     stroke: new Stroke({
-        color: '#02a9f7',
+        color: '#979ea1',
         width: 4,
     }),
 });
-  
+
+const airportStyle = new Style({
+    image: new CircleStyle({
+        radius: 7,
+        fill: new Fill({color: 'black'}),
+        stroke: new Stroke({
+            color: 'white',
+            width: 3,
+        }),
+    }),
+});
+
+const airports = [];
+
 const flightsSource = new Vector({
     loader: function () {
         for (let i = 0; i < flightsData.length; i++) {
@@ -114,6 +150,17 @@ const flightsSource = new Vector({
             
             let allPoints = [ori, ...inter, des];
             let allGeometries = [];
+
+            // add icon features for airports
+            const originFeature = new Feature({
+                geometry: new Point([ori[0], ori[1]]),
+                name: 'Origin Airport',
+                lat: ori[0],
+                lon: ori[1],
+            });
+        
+            // Add the origin airport feature to the airports array
+            airports.push(originFeature);
 
             // Iterate over each pair of consecutive points
             for (let j = 0; j < allPoints.length - 1; j++) {
@@ -142,12 +189,12 @@ const flightsSource = new Vector({
                 const isInter = (i !== 0 && i !== allGeometries.length - 1);
 
                 features.push(
-                new Feature({
-                    geometry: line,
-                    finished: false,
-                    segmentCount: allGeometries.length,
-                    isInter: isInter, 
-                }),
+                    new Feature({
+                        geometry: line,
+                        finished: false,
+                        segmentCount: allGeometries.length,
+                        isInter: isInter, 
+                    }),
                 );
             });
             // add the features with a delay so that the animation
@@ -157,6 +204,17 @@ const flightsSource = new Vector({
         tileLayer.on('postrender', animateFlights);
     },
 });
+
+const airportsSource = new Vector({
+    features: airports
+  });
+
+const airportsLayer = new VectorLayer({
+    source: airportsSource,
+    style: airportStyle
+});
+
+map.addLayer(airportsLayer);
   
 const flightsLayer = new VectorLayer({
     source: flightsSource,
