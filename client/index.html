@@ -9,6 +9,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Rubik+Maps&family=Rubik+Mono+One&family=Syne:wght@400..800&display=swap" rel="stylesheet">
         <script src="https://api.mapbox.com/mapbox.js/plugins/arc.js/v0.1.0/arc.js"></script>
+        <!-- Control tower icon created by Ahmad Yafie - Flaticon, "https://www.flaticon.com/free-icons/control-tower" -->
     </head>
     <body>
         <div id="header">
@@ -26,6 +27,10 @@
                     <div class="innerBevel">
                         <div id="map"></div>
                         <script type="module" src="./map.js"></script>
+                        <div id="popup" class="ol-popup">
+                            <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+                            <div id="popup-content"></div>
+                        </div>
                     </div>
                 </div>
             </div>

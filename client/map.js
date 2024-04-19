@@ -5,6 +5,7 @@ import TileLayer from 'ol/layer/Tile';
 import {Map, View, Feature} from 'ol';
 import Heatmap from 'ol/layer/Heatmap';
 import Vector from 'ol/source/Vector';
+import Overlay from 'ol/Overlay.js';
 import XYZ from 'ol/source/XYZ';
 import Point from 'ol/geom/Point';
 import {fromLonLat} from 'ol/proj';
@@ -128,18 +129,78 @@ const interFinishedStyle = new Style({
 });
 
 const airportStyle = new Style({
-    image: new CircleStyle({
-        radius: 7,
-        fill: new Fill({color: 'black'}),
-        stroke: new Stroke({
-            color: 'white',
-            width: 3,
-        }),
-    }),
+    image: new Icon({
+        anchor: [0.5, 1],
+        anchorXUnits: 'fraction',
+        anchorYUnits: 'fraction',
+        src: '/airport-tower.png',
+        scale: 0.07,
+      }),
 });
 
-const airports = [];
+// create airport points layer
+const airportsLayer = new VectorLayer({
+    source: new Vector(),
+    style: airportStyle
+});
 
+// Iterate over the JSON object to create point features
+flightsData.forEach(function(flight) {
+    const ori = flight.ori;
+    const des = flight.des;
+
+    // create origin point
+    const oriPoint = new Point(fromLonLat([ori[1], ori[0]]));
+    const oriFeature = new Feature({
+        geometry: oriPoint,
+        name: ori[2]
+    });
+    airportsLayer.getSource().addFeature(oriFeature);
+
+    // create destination point
+    const desPoint = new Point(fromLonLat([des[1], des[0]]));
+    const desFeature = new Feature({
+        geometry: desPoint,
+        name: des[2]
+    });
+    airportsLayer.getSource().addFeature(desFeature);
+
+});
+
+
+// create popup for airports
+const popupOverlay = new Overlay({
+    element: document.getElementById('popup'),
+    autoPan: true,
+    autoPanAnimation: {
+        duration: 250
+    }
+});
+
+// Event handler for click on airport feature
+map.on('click', function(event) {
+    let isAirportClicked = false;
+
+    map.forEachFeatureAtPixel(event.pixel, function(feature) {
+        if (feature.get('name')) {
+            isAirportClicked = true;
+            const coordinates = feature.getGeometry().getCoordinates();
+            popupOverlay.setPosition(coordinates);
+            const airportName = feature.get('name');
+            document.getElementById('popup-content').innerHTML = airportName;
+        }
+    });
+
+    if (!isAirportClicked) {
+        popupOverlay.setPosition(undefined); // Hide the popup
+    }
+});
+
+// Adjust the offset of the popup to move it above the feature
+popupOverlay.setOffset([2, -10]); // Adjust the vertical offset as needed
+
+
+// create flights
 const flightsSource = new Vector({
     loader: function () {
         for (let i = 0; i < flightsData.length; i++) {
@@ -150,17 +211,6 @@ const flightsSource = new Vector({
             
             let allPoints = [ori, ...inter, des];
             let allGeometries = [];
-
-            // add icon features for airports
-            const originFeature = new Feature({
-                geometry: new Point([ori[0], ori[1]]),
-                name: 'Origin Airport',
-                lat: ori[0],
-                lon: ori[1],
-            });
-        
-            // Add the origin airport feature to the airports array
-            airports.push(originFeature);
 
             // Iterate over each pair of consecutive points
             for (let j = 0; j < allPoints.length - 1; j++) {
@@ -204,17 +254,6 @@ const flightsSource = new Vector({
         tileLayer.on('postrender', animateFlights);
     },
 });
-
-const airportsSource = new Vector({
-    features: airports
-  });
-
-const airportsLayer = new VectorLayer({
-    source: airportsSource,
-    style: airportStyle
-});
-
-map.addLayer(airportsLayer);
   
 const flightsLayer = new VectorLayer({
     source: flightsSource,
@@ -231,8 +270,6 @@ const flightsLayer = new VectorLayer({
         return null;
     },
 });
-  
-map.addLayer(flightsLayer);
   
 const pointsPerMs = 0.02;
 function animateFlights(event) {
@@ -298,3 +335,8 @@ function addLater(features, timeout) {
         });
     }, timeout);
 }
+
+// add dynamic layers to the map
+map.addLayer(flightsLayer);
+map.addLayer(airportsLayer);
+map.addOverlay(popupOverlay);

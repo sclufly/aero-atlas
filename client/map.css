@@ -47,6 +47,41 @@ h2 {
     height: 80vh;
 }
 
+#popup-content {
+    font-family: "Rubik Mono One", monospace;
+    font-size: 15px;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.ol-popup {
+    position: absolute;
+    background-color: white;
+    -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #cccccc;
+    bottom: 12px;
+    left: -37px;
+}
+
+.ol-popup:after {
+    top: 98%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.ol-popup:after {
+    border-top-color: white;
+    border-width: 10px;
+    left: 25px;
+}
+
 .outerBevel {
     box-shadow: 4px 6px 12px 0 black;
     border-width: 5px;
