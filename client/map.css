@@ -1,20 +1,16 @@
 @import "node_modules/ol/ol.css";
 
-html, body {
-    margin: 0;
-    height: 100%;
-}
-
 body {
+    margin: 0px;
+    padding: 0px;
+    background-color: rgb(69, 133, 136);
+    background-size: 60px 60px;
+    background-image:
+        linear-gradient(to right, #83a598 1px, transparent 1px),
+        linear-gradient(to bottom, #83a598 1px, transparent 1px);
     display: flex;
     flex-direction: column;
-    background-color: rgb(38, 60, 81);
-}
-
-#header {
-    text-align: left;
-    height: auto;
-    margin: 20px 0px 40px 30px;
+    overflow-x: hidden;
 }
 
 h1 {
@@ -22,8 +18,10 @@ h1 {
     font-size: 100px;
     font-weight: 400;
     font-style: normal;
-    color: #ffffff;
+    color: #fbf1c7;
+    /* color: #ebdbb2; */
     margin: 0;
+    text-align: center;
 }
 
 h2 {
@@ -31,9 +29,73 @@ h2 {
     font-size: 20px;
     font-weight: 400;
     font-style: normal;
-    color: #ffffff;
-    margin: 0;
-    margin-top: 10px;
+    /* color: #d5c4a1; */
+    color: #282828;
+    text-align: center;
+}
+
+.landing-screen {
+    height: 100vh;
+    width: 100%;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    position: relative;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* button design by Paper CSS - https://getcssscan.com/css-buttons-examples */
+.scroll-button {
+    align-self: center;
+    background-color: #bdae93;
+    background-image: none;
+    background-position: 0 90%;
+    background-repeat: repeat no-repeat;
+    background-size: 4px 3px;
+    border-radius: 15px 225px 255px 15px 15px 255px 225px 15px;
+    border-style: solid;
+    border-width: 2px;
+    box-shadow: rgba(0, 0, 0, .2) 15px 28px 25px -18px;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: inline-block;
+    line-height: 30px;
+    outline: none;
+    padding: .75rem;
+    text-decoration: none;
+    transition: all 235ms ease-in-out;
+    border-bottom-left-radius: 15px 255px;
+    border-bottom-right-radius: 225px 15px;
+    border-top-left-radius: 255px 15px;
+    border-top-right-radius: 15px 225px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+
+    margin-top: 40px;
+    font-family: "Rubik Mono One", monospace;
+    font-size: 20px;
+    font-weight: 400;
+    font-style: normal;
+    color: #282828;
+}
+
+.scroll-button:hover {
+    background-color: #a89984;
+    box-shadow: rgba(0, 0, 0, .3) 2px 8px 8px -5px;
+    transform: translate3d(0, 2px, 0);
+}
+
+.scroll-button:focus {
+    box-shadow: rgba(0, 0, 0, .3) 2px 8px 4px -6px;
 }
 
 #map-div {
@@ -52,18 +114,19 @@ h2 {
     font-size: 15px;
     font-weight: 400;
     font-style: normal;
+    color: #ffffff;
 }
 
 .ol-popup {
     position: absolute;
-    background-color: white;
+    background-color: rgb(124, 111, 100);
     -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
     filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-    padding: 15px;
+    padding: 10px;
+    padding-top: 15px;
     border-radius: 10px;
-    border: 1px solid #cccccc;
-    bottom: 12px;
-    left: -37px;
+    bottom: 5px;
+    left: -31px;
 }
 
 .ol-popup:after {
@@ -77,76 +140,77 @@ h2 {
 }
 
 .ol-popup:after {
-    border-top-color: white;
+    border-top-color: rgb(124, 111, 100);
     border-width: 10px;
-    left: 25px;
-}
-
-.outerBevel {
-    box-shadow: 4px 6px 12px 0 black;
-    border-width: 5px;
-    border-style: solid;
-    border-color: rgb(109, 84, 58) rgb(24, 19, 13) rgb(24, 19, 13) rgb(109, 84, 58);
-}
-
-.flatSurface {
-    border: 12px solid rgb(65, 40, 16);
-}
-
-.innerBevel {
-    border-width: 5px;
-    border-style: solid;
-    border-color: rgb(24, 19, 13) rgb(109, 84, 58) rgb(109, 84, 58) rgb(24, 19, 13);
+    left: 19px;
 }
 
 .plane {
     position: absolute;
     display: flex;
-    margin: 100px auto;
-    animation: flight 7s forwards;
+    width: 126px;
+    height: 43px;
+    margin: 40px auto;
+    animation: flight 15s linear infinite;
 }
 
 #plane-object {
     width: 126px;
     height: 43px;
 }
-
-.plane h2 {
-    animation: plane-stutter 5s forwards;
-}
-
+  
 .plane svg {
-    animation-name: plane-stutter, disappear;
-    animation-duration: 5s, 15s;
-    animation-fill-mode: forwards, forwards;
+    animation: plane-stutter 5s infinite;
 }
-
+  
 .smoke1 {
-    animation: smoke 1s forwards 6;
+    animation: smoke 1s infinite;
 }
-
+  
 .smoke2 {
-    animation: smoke 1s forwards 7;
+    animation: smoke 1s infinite;
     animation-delay: 0.4s;
 }
-
+  
 .smoke3 {
-    animation: smoke 1s forwards 6;
+    animation: smoke 1s infinite;
     animation-delay: 0.2s;
 }
-
+  
 .smoke4 {
-    animation: smoke 1s forwards 7;
+    animation: smoke 1s infinite;
     animation-delay: 0.7s;
 }
-
+  
 .path {
-    animation: draw 0.2s linear forwards 43;
+    animation: draw 0.2s linear infinite;
 }
-
+   
 @keyframes draw {
     50% {
         stroke-dashoffset: 0;
+    }
+}
+  
+@keyframes plane-stutter {
+    0% {
+        transform: translateY(100%);
+    }
+    
+    25% {
+        transform: translateY(20%);
+    }
+    
+    50% {
+        transform: translateY(80%);
+    }
+    
+    75% {
+        transform: translateY(0%);
+    }
+    
+    100% {
+        transform: translateY(100%);
     }
 }
 
@@ -167,9 +231,21 @@ h2 {
 
 @keyframes plane-stutter {
     0% {
+        transform: translateY(100%);
+    }
+    
+    25% {
+        transform: translateY(20%);
+    }
+    
+    50% {
+        transform: translateY(80%);
+    }
+    
+    75% {
         transform: translateY(0%);
     }
-
+    
     100% {
         transform: translateY(100%);
     }
@@ -177,20 +253,10 @@ h2 {
 
 @keyframes flight {
     0% {
-        transform: translateX(-100%);
+        transform: translateX(-650%);
     }
     
     100% {
-        transform: translateX(3%);
-    }
-}
-
-@keyframes disappear {
-    from {
-        opacity: 1;
-    }
-  
-    to {
-        opacity: 0;
+        transform: translateX(650%);
     }
 }
