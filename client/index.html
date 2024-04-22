@@ -6,17 +6,17 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" type="image/x-icon" href="./airplane-icon.ico" />
-        <link rel="preload" href="map.css" as="style" />
+        <link rel="preload" as="style" href="map.css" />
         <link rel="stylesheet" href="map.css" />
-        <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Rubik+Maps&family=Rubik+Mono+One&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Rubik+Maps&family=Rubik+Mono+One&display=swap" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Maps&family=Rubik+Mono+One&display=swap" crossorigin="anonymous">
         <script src="https://api.mapbox.com/mapbox.js/plugins/arc.js/v0.1.0/arc.js"></script>
     </head>
     <body>
         <div id="loading"></div>
         <section class="landing-screen">
-            <div class="header">
+            <div class="title">
                 <h1>Aero Atlas</h1>
                 <h2>A Collection of Flight Data from the Greater Toronto Area</h2>
                 <button class="scroll-button" onclick="scrollPage()">GO</button>
@@ -27,7 +27,9 @@
             </div>
         </section>
         
-        <section class="test">
+        <section class="historical-data">
+            <button class="historical-data-button" onclick="toggleParagraph('historical-data-para')">Historical Flight Data</button>
+            <p id="historical-data-para" class="hidden">This map displays historical flight data from the selected time period. The yellow sections represent the part of the flight path that I personally captured from my antenna, while the brown sections fill in the rest of the flight. <br> Click on airports, change the map style, or display the heatmap to see more.</p>
             <div id="map-div">
                 <div id="map"></div>
                 <script type="module" src="./map.js"></script>
@@ -36,15 +38,30 @@
                     <div id="popup-content"></div>
                 </div>
             </div>
+            <button id="map-style-button">Change Map Style</button>
+            <button id="heatmap-button">Show/Hide Heatmap</button>
         </section>
-        <button id="map-style-button">Change Map Style</button>
-        <button id="heatmap-button">Show/Hide Heatmap</button>
+
+        <section class="live-data">
+            <h2 class="section-heading">Live Flight Data</h2>
+            <p>Coming Soon!</p>
+        </section>
+        
         <script>
             function scrollPage() {
                 window.scrollBy({
                     top: window.innerHeight,
                     behavior: 'smooth' // Smooth scrolling behavior
                 });
+            }
+            function toggleParagraph(id) {
+                var paragraph = document.getElementById(id);
+                paragraph.classList.toggle("hidden");
+                if (paragraph.classList.contains("hidden")) {
+                    paragraph.style.maxHeight = null;
+                } else {
+                    paragraph.style.maxHeight = paragraph.scrollHeight + "px";
+                }
             }
         </script>
     </body>

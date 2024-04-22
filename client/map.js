@@ -49,6 +49,17 @@ const COLOURS = {
     dark_orange: '#d65d0e',
     orange: '#fe8019'
 };
+const HYBRID_AIRPORTS = (() => {
+    let oriAirports = new Set();
+    let desAirports = new Set();
+
+    flightsData.forEach(flight => { 
+        oriAirports.add(flight.ori[2]);
+        desAirports.add(flight.des[2]);
+    });
+
+    return oriAirports.intersection(desAirports)
+})();
 
 // === HEATMAP ===
 
@@ -186,6 +197,16 @@ const desAirportStyle = new Style({
     })
 });
 
+const hybridAirportStyle = new Style({
+    image: new CircleStyle({
+        radius: 6,
+        fill: new Fill({color: COLOURS.yellow}),
+        stroke: new Stroke({
+            color: COLOURS.dark_gray, width: 3
+        })
+    })
+});
+
 // create popup for airports
 const popupOverlay = new Overlay({
     element: document.getElementById('popup'),
@@ -220,6 +241,7 @@ popupOverlay.setOffset([2, -10]); // Adjust the vertical offset as needed
 
 // create flights
 const flightsSource = new Vector({
+    attributions: 'Base Maps from <a href="https://server.arcgisonline.com/ArcGIS/rest/services/">ArcGIS Online</a>, Flight Data from Sarah Cloughley',
     loader: function () {
         for (let i = 0; i < flightsData.length; i++) {
             const flight = flightsData[i];
@@ -319,6 +341,9 @@ const flightsLayer = new VectorLayer({
 
              // if it's a point, use the airport style
             if (feature.getGeometry().getType() === 'Point') {
+                if (HYBRID_AIRPORTS.has(feature.get('name'))) {
+                    return hybridAirportStyle;
+                }
                 return (feature.get('airport') === 'origin') ? oriAirportStyle : desAirportStyle;
             }
 

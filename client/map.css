@@ -29,9 +29,63 @@ h2 {
     font-size: 20px;
     font-weight: 400;
     font-style: normal;
-    /* color: #d5c4a1; */
     color: #282828;
     text-align: center;
+}
+
+p {
+    font-family:'Courier New', Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    font-style: normal;
+    color: #3c3836;
+    background-color: #bdae9390;
+    text-align: left;
+    margin: 0px 2vw 20px 2vw;
+}
+
+#historical-data-para {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out;
+}
+  
+.hidden {
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.section-heading {
+    align-self: center;
+    background-color: #bdae93;
+    background-image: none;
+    background-position: 0 90%;
+    background-repeat: repeat no-repeat;
+    background-size: 4px 3px;
+    border-radius: 15px 225px 255px 15px 15px 255px 225px 15px;
+    border-style: solid;
+    border-width: 2px;
+    box-shadow: rgba(0, 0, 0, .2) 15px 28px 25px -18px;
+    box-sizing: border-box;
+    display: inline-block;
+    line-height: 30px;
+    outline: none;
+    padding: .75rem;
+    text-decoration: none;
+    transition: all 235ms ease-in-out;
+    border-bottom-left-radius: 15px 255px;
+    border-bottom-right-radius: 225px 15px;
+    border-top-left-radius: 255px 15px;
+    border-top-right-radius: 15px 225px;
+
+    margin-top: 40px;
+    font-family: "Rubik Mono One", monospace;
+    font-size: 20px;
+    font-weight: 400;
+    font-style: normal;
+    color: #282828;
+    margin-left: 2vw;
 }
 
 .landing-screen {
@@ -44,7 +98,7 @@ h2 {
     position: relative;
 }
 
-.header {
+.title {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -53,7 +107,8 @@ h2 {
 }
 
 /* button design by Paper CSS - https://getcssscan.com/css-buttons-examples */
-.scroll-button {
+.scroll-button,
+.historical-data-button {
     align-self: center;
     background-color: #bdae93;
     background-image: none;
@@ -88,13 +143,20 @@ h2 {
     color: #282828;
 }
 
-.scroll-button:hover {
+.historical-data-button {
+    margin-left: 2vw;
+    margin-bottom: 20px;
+}
+
+.scroll-button:hover,
+.historical-data-button:hover {
     background-color: #a89984;
     box-shadow: rgba(0, 0, 0, .3) 2px 8px 8px -5px;
     transform: translate3d(0, 2px, 0);
 }
 
-.scroll-button:focus {
+.scroll-button:focus,
+.historical-data-button:focus {
     box-shadow: rgba(0, 0, 0, .3) 2px 8px 4px -6px;
 }
 
@@ -152,11 +214,7 @@ h2 {
     height: 43px;
     margin: 40px auto;
     animation: flight 15s linear infinite;
-}
-
-#plane-object {
-    width: 126px;
-    height: 43px;
+    top: 30px;
 }
   
 .plane svg {
