@@ -7,7 +7,7 @@ load_dotenv()
 
 
 # store env variables
-PI_URL = os.getenv('WATERLOO_PI_URL')
+PI_URL = os.getenv('MARKHAM_PI_URL')
 SERVER_URL=os.getenv('SERVER_URL')
 HEADERS=os.getenv('HEADERS')
 FLIGHT_URL=os.getenv('FLIGHT_URL')
