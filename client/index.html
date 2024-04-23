@@ -37,9 +37,23 @@
                     <a href="#" id="popup-closer" class="ol-popup-closer"></a>
                     <div id="popup-content"></div>
                 </div>
+                <div id="controls">
+                    <select id="time-button">
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="week">Last Week</option>
+                        <option value="month">Last Month</option>
+                        <option value="year">Last Year</option>
+                        <option value="all">All Time</option>
+                    </select>
+                    <select id="map-style-button">
+                        <option value="World_Terrain_Base">Terrain Base Map</option>
+                        <option value="World_Topo_Map">Topology Base Map</option>
+                        <option value="World_Imagery">Imagery Base Map</option>
+                    </select>
+                    <button id="heatmap-button">Show Heatmap</button>
+                    <button id="replay-button">Replay Animation</button>
+                </div>
             </div>
-            <button id="map-style-button">Change Map Style</button>
-            <button id="heatmap-button">Show/Hide Heatmap</button>
         </section>
 
         <section class="live-data">

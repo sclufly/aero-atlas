@@ -161,6 +161,7 @@ p {
 }
 
 #map-div {
+    position: relative;
     width: 95vw;
     margin: auto;
 }
@@ -169,6 +170,13 @@ p {
     flex: 1;
     position: relative;
     height: 80vh;
+}
+
+#controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
 }
 
 #popup-content {

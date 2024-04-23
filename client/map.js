@@ -105,11 +105,9 @@ const mapStyleButton = document.getElementById('map-style-button');
 const mapStyles = ["World_Terrain_Base", "World_Topo_Map", "World_Imagery"];
 let currentMapStyle = mapStyles[0];
 
-mapStyleButton.addEventListener('click', function () {
-    const currentIndex = mapStyles.indexOf(currentMapStyle); 
-    const nextIndex = (currentIndex + 1) % mapStyles.length;
-    currentMapStyle = mapStyles[nextIndex];
-    tileLayer.getSource().setUrl(`https://server.arcgisonline.com/ArcGIS/rest/services/${currentMapStyle}/MapServer/tile/{z}/{y}/{x}`);
+mapStyleButton.addEventListener('change', function () {
+    const selectedLayer = mapStyleButton.value;
+    tileLayer.getSource().setUrl(`https://server.arcgisonline.com/ArcGIS/rest/services/${selectedLayer}/MapServer/tile/{z}/{y}/{x}`);
 });
 
 // map style layer
@@ -125,6 +123,11 @@ const heatmapButton = document.getElementById('heatmap-button');
 let showHeatmap = false;
 
 heatmapButton.addEventListener('click', function () {
+    if (showHeatmap) {
+        heatmapButton.textContent = "Show Heatmap";
+    } else {
+        heatmapButton.textContent = "Hide Heatmap";
+    }
     showHeatmap = !showHeatmap;
     heatmapLayer.setVisible(showHeatmap);
 });
@@ -240,95 +243,98 @@ popupOverlay.setOffset([2, -10]); // Adjust the vertical offset as needed
 
 
 // create flights
-const flightsSource = new Vector({
-    attributions: 'Base Maps from <a href="https://server.arcgisonline.com/ArcGIS/rest/services/">ArcGIS Online</a>, Flight Data from Sarah Cloughley',
-    loader: function () {
-        for (let i = 0; i < flightsData.length; i++) {
-            const flight = flightsData[i];
-            const ori = flight.ori;
-            const des = flight.des;
-            const inter = flight.inter || [];
-            let crossesDateLine = false;
-            let dateLineCrossIndex = 0;
+function flightsLoader() {
+    for (let i = 0; i < flightsData.length; i++) {
+        const flight = flightsData[i];
+        const ori = flight.ori;
+        const des = flight.des;
+        const inter = flight.inter || [];
+        let crossesDateLine = false;
+        let dateLineCrossIndex = 0;
+        
+        let allPoints = [ori, ...inter, des];
+        let allGeometries = [];
+
+        // create origin airport point
+        const oriPoint = new Point(fromLonLat([ori[1], ori[0]]));
+        const oriFeature = new Feature({
+            geometry: oriPoint,
+            name: ori[2],
+            finished: true,
+            airport: "origin",
+        });
+
+        // Iterate over each pair of consecutive points
+        for (let j = 0; j < allPoints.length - 1; j++) {
+            const fromPoint = allPoints[j];
+            const toPoint = allPoints[j + 1];
+
+            // Create an arc circle between the two locations
+            const arcGenerator = new arc.GreatCircle(
+                {x: fromPoint[1], y: fromPoint[0]},
+                {x: toPoint[1], y: toPoint[0]}
+            );
+
+            // Generate the arc line
+            const arcLine = arcGenerator.Arc(100, {offset: 10});
             
-            let allPoints = [ori, ...inter, des];
-            let allGeometries = [];
-
-            // create origin airport point
-            const oriPoint = new Point(fromLonLat([ori[1], ori[0]]));
-            const oriFeature = new Feature({
-                geometry: oriPoint,
-                name: ori[2],
-                finished: true,
-                airport: "origin",
-            });
-
-            // Iterate over each pair of consecutive points
-            for (let j = 0; j < allPoints.length - 1; j++) {
-                const fromPoint = allPoints[j];
-                const toPoint = allPoints[j + 1];
-
-                // Create an arc circle between the two locations
-                const arcGenerator = new arc.GreatCircle(
-                    {x: fromPoint[1], y: fromPoint[0]},
-                    {x: toPoint[1], y: toPoint[0]}
-                );
-
-                // Generate the arc line
-                const arcLine = arcGenerator.Arc(100, {offset: 10});
-                
-                // deal with dateline cross
-                if (arcLine.geometries.length > 1) {
-                    crossesDateLine = true;
-                    dateLineCrossIndex = j || 1;
-                }
-
-                // Add arc coordinates to the concatenated points array
-                allGeometries = allGeometries.concat(arcLine.geometries);
+            // deal with dateline cross
+            if (arcLine.geometries.length > 1) {
+                crossesDateLine = true;
+                dateLineCrossIndex = j || 1;
             }
 
-            // paths which cross the -180°/+180° meridian are split
-            // into two sections which will be animated sequentially
-            const features = [oriFeature];
-            allGeometries.map(function (geometry, i) {
-
-                const line = new LineString(geometry.coords);
-                line.transform('EPSG:4326', 'EPSG:3857');
-                let isInter = (i !== 0 && i !== allGeometries.length - 1);
-                const isLast = (i === allGeometries.length - 1);
-
-                // check for dateline cross
-                if (dateLineCrossIndex === i) {
-                    isInter = false;
-                }
-
-                features.push(
-                    new Feature({
-                        geometry: line,
-                        finished: false,
-                        segmentCount: allGeometries.length,
-                        isInter: isInter, 
-                        isLast: isLast,
-                    }),
-                );
-            });
-
-            // create destination airport point
-            const desPoint = new Point(fromLonLat([des[1], des[0]]));
-            const desFeature = new Feature({
-                geometry: desPoint,
-                name: des[2],
-                finished: false,
-                airport: "destination",
-            });
-            features.push(desFeature);
-
-            // add the features with a delay so that the animation
-            // for all features does not start at the same time
-            addLater(features, i * 500);
+            // Add arc coordinates to the concatenated points array
+            allGeometries = allGeometries.concat(arcLine.geometries);
         }
-        tileLayer.on('postrender', animateFlights);
-    },
+
+        // paths which cross the -180°/+180° meridian are split
+        // into two sections which will be animated sequentially
+        const features = [oriFeature];
+        allGeometries.map(function (geometry, i) {
+
+            const line = new LineString(geometry.coords);
+            line.transform('EPSG:4326', 'EPSG:3857');
+            let isInter = (i !== 0 && i !== allGeometries.length - 1);
+            const isLast = (i === allGeometries.length - 1);
+
+            // check for dateline cross
+            if (dateLineCrossIndex === i) {
+                isInter = false;
+            }
+
+            features.push(
+                new Feature({
+                    geometry: line,
+                    finished: false,
+                    segmentCount: allGeometries.length,
+                    isInter: isInter, 
+                    isLast: isLast,
+                }),
+            );
+        });
+
+        // create destination airport point
+        const desPoint = new Point(fromLonLat([des[1], des[0]]));
+        const desFeature = new Feature({
+            geometry: desPoint,
+            name: des[2],
+            finished: false,
+            airport: "destination",
+        });
+        features.push(desFeature);
+
+        // add the features with a delay so that the animation
+        // for all features does not start at the same time
+        addLater(features, i * 500);
+    }
+    tileLayer.on('postrender', animateFlights);
+};
+
+
+const flightsSource = new Vector({
+    attributions: 'Base Maps from <a href="https://server.arcgisonline.com/ArcGIS/rest/services/">ArcGIS Online</a>, Flight Data from Sarah Cloughley',
+    loader: flightsLoader,
 });
   
 const flightsLayer = new VectorLayer({
@@ -428,6 +434,14 @@ function addLater(features, timeout) {
         flightsSource.addFeatures(features);
     }, timeout);
 }
+
+// button functionality for replaying the animation
+const replayButton = document.getElementById('replay-button');
+
+replayButton.addEventListener('click', function () {
+    flightsSource.clear();
+    flightsLoader();
+});
 
 // add dynamic layers to the map
 map.addLayer(flightsLayer);
