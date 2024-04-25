@@ -1,5 +1,6 @@
 import './map.css';
 import flightsData from './fake_data.json';
+import {getHistoricalData} from './historical-data.js';
 
 import TileLayer from 'ol/layer/Tile';
 import {Map, View, Feature} from 'ol';
@@ -15,6 +16,17 @@ import {getVectorContext} from 'ol/render.js';
 import {getWidth} from 'ol/extent.js';
 import {Stroke, Style, Circle as CircleStyle, Fill} from 'ol/style.js';
 
+
+async function processData() {
+    try {
+        const data = await getHistoricalData(0);
+        console.log(`data in map.js === ${JSON.stringify(data)}`);
+    } catch (error) {
+        console.log(`error in map.js`);
+    }
+}
+
+processData();
 
 // === CONSTANTS ===
 const COLOURS = {
@@ -203,7 +215,7 @@ const desAirportStyle = new Style({
 const hybridAirportStyle = new Style({
     image: new CircleStyle({
         radius: 6,
-        fill: new Fill({color: COLOURS.yellow}),
+        fill: new Fill({color: COLOURS.orange}),
         stroke: new Stroke({
             color: COLOURS.dark_gray, width: 3
         })

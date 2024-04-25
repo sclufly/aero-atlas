@@ -79,13 +79,39 @@
                 $historical_data = array ( array ( ));
                 unset( $historical_data [ 0 ]);
                 
-                echo "# of rows returned : ".mysqli_num_rows( $result )."\n";
-
                 // add data to array
                 while($row = mysqli_fetch_assoc($result)) {         
                     array_push( $historical_data, $row );
                 }
             }
+        }
+
+        // format historical data into a JSON
+        public function formatHistoricalData ( $historical_data ) {
+
+            $formattedData = array();
+
+            foreach ($historical_data as $entry) {
+                $tripId = $entry["trip_id"];
+            
+                // initialize an array for this trip_id if not already initialized
+                if (!isset($formattedData[$tripId])) {
+                    $formattedData[$tripId] = array(
+                        "ori" => array(floatval($entry["ori_lat"]), floatval($entry["ori_lon"]), $entry["ori_code"]),
+                        "des" => array(floatval($entry["des_lat"]), floatval($entry["des_lon"]), $entry["des_code"]),
+                        "inter" => array()
+                    );
+                }
+            
+                // add the intermediate point to the "inter" array if available
+                if (!empty($entry["inter_lat"]) && !empty($entry["inter_lon"])) {
+                    $formattedData[$tripId]["inter"][] = array(floatval($entry["inter_lat"]), floatval($entry["inter_lon"]));
+                }
+            }
+
+            header("Content-Type: application/json");
+            $jsonData = json_encode(array_values($formattedData), JSON_PRETTY_PRINT);
+            echo $jsonData;
         }
     }
 
@@ -106,11 +132,12 @@
     if ( $error == "OK" ) {
         try {
             $db->getHistoricalData( $time_period, $historical_data );
+            $db->formatHistoricalData( $historical_data );
         } catch ( Exception $e ) {
             $error = "ERROR: ".$e->getMessage()."\n";
         }
     }
 
-    print_r($historical_data);
-    echo $error;
+    //print_r($historical_data);
+    //echo $error;
 ?>
