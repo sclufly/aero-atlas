@@ -49,6 +49,16 @@
         // get all historical data for the given time period
         public function getHistoricalData ( $time_period, &$historical_data ) {
 
+            // create mapping for time periods
+            $time_intervals = array(
+                0 => '30 MINUTE',
+                1 => '1 HOUR',
+                2 => '3 HOUR',
+                3 => '12 HOUR',
+                4 => '1 DAY',
+            );
+
+            // create query
             $query ="SELECT 
                         A.trip_id,
                         B_ori.code AS ori_code,
@@ -68,7 +78,7 @@
                     JOIN
                         aero_trip_data C ON A.trip_id = C.trip_id
                     WHERE 
-                        A.start_time < now()";
+                        A.start_time >= DATE_SUB((SELECT MAX(start_time) FROM aero_trip), INTERVAL {$time_intervals[$time_period]});";
 
             // execute query
             if ( !$result = mysqli_query($this->conn, $query) ) {
@@ -137,7 +147,4 @@
             $error = "ERROR: ".$e->getMessage()."\n";
         }
     }
-
-    //print_r($historical_data);
-    //echo $error;
 ?>

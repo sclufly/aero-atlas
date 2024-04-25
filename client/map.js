@@ -1,5 +1,5 @@
 import './map.css';
-import flightsData from './fake_data.json';
+import fakeData from './fake_data_2.json';
 import {getHistoricalData} from './historical-data.js';
 
 import TileLayer from 'ol/layer/Tile';
@@ -17,18 +17,8 @@ import {getWidth} from 'ol/extent.js';
 import {Stroke, Style, Circle as CircleStyle, Fill} from 'ol/style.js';
 
 
-async function processData() {
-    try {
-        const data = await getHistoricalData(0);
-        console.log(`data in map.js === ${JSON.stringify(data)}`);
-    } catch (error) {
-        console.log(`error in map.js`);
-    }
-}
-
-processData();
-
 // === CONSTANTS ===
+
 const COLOURS = {
     bg: '#282828',
     bg0_h: '#1d2021',
@@ -61,17 +51,21 @@ const COLOURS = {
     dark_orange: '#d65d0e',
     orange: '#fe8019'
 };
-const HYBRID_AIRPORTS = (() => {
-    let oriAirports = new Set();
-    let desAirports = new Set();
 
-    flightsData.forEach(flight => { 
-        oriAirports.add(flight.ori[2]);
-        desAirports.add(flight.des[2]);
-    });
+// var hybridAirports = null;
+// //setHybridAirports(fakeData);
+// function setHybridAirports(flightsData) {
+//     let oriAirports = new Set();
+//     let desAirports = new Set();
 
-    return oriAirports.intersection(desAirports)
-})();
+//     flightsData.forEach(flight => { 
+//         oriAirports.add(flight.ori[2]);
+//         desAirports.add(flight.des[2]);
+//     });
+
+//     hybridAirports = oriAirports.intersection(desAirports);
+// }
+
 
 // === HEATMAP ===
 
@@ -115,7 +109,7 @@ heatmapLayer.setVisible(false);
 // button functionality for changing the current map style
 const mapStyleButton = document.getElementById('map-style-button');
 const mapStyles = ["World_Terrain_Base", "World_Topo_Map", "World_Imagery"];
-let currentMapStyle = mapStyles[0];
+var currentMapStyle = mapStyles[0];
 
 mapStyleButton.addEventListener('change', function () {
     const selectedLayer = mapStyleButton.value;
@@ -132,7 +126,7 @@ var tileLayer = new TileLayer({
 
 // button functionality for showing/hiding the heatmap layer
 const heatmapButton = document.getElementById('heatmap-button');
-let showHeatmap = false;
+var showHeatmap = false;
 
 heatmapButton.addEventListener('click', function () {
     if (showHeatmap) {
@@ -142,11 +136,12 @@ heatmapButton.addEventListener('click', function () {
     }
     showHeatmap = !showHeatmap;
     heatmapLayer.setVisible(showHeatmap);
+    //flightsLayer.setVisible(!showHeatmap);
 });
 
 const view = new View({
     center: [-8800000, 5400000],
-    zoom: 4
+    zoom: 5.5
 });
 
 // map object
@@ -160,18 +155,45 @@ const map = new Map({
 
 // === FLIGHT DATA ===
 
+// attach an event listener to the dropdown element
+const timeButton = document.getElementById("time-button");
+timeButton.addEventListener("change", async function() {
+    const selectedValue = timeButton.value;
+    await processHistoricalData(selectedValue);
+});
+
+// wrapper for server call for historical data
+var flightsData = null;
+async function processHistoricalData(selectedValue) {
+    try {
+        // clear previous features before fetching new data
+        flightsSource.clear();
+        flightsData = null;
+
+        flightsData = await getHistoricalData(selectedValue ?? 0);
+        console.log(`data in map.js === ${JSON.stringify(flightsData)}`);
+
+        // re-render
+        flightsLoader(flightsData);
+        //setHybridAirports(flightsData);
+
+    } catch (error) {
+        console.log("ERROR - unable to fetch historical flight data");
+    }
+}
+
 const oriDesStyle = new Style({
     stroke: new Stroke({
-        color: COLOURS.gray,
-        width: 5,
+        color: COLOURS.dark_gray,
+        width: 3,
         lineDash: [5, 7],
     }),
 });
 
 const oriDesFinishedStyle = new Style({
     stroke: new Stroke({
-        color: COLOURS.dark_gray,
-        width: 4,
+        color: COLOURS.bg4,
+        width: 2,
         lineDash: [5, 7],
     }),
 });
@@ -179,16 +201,16 @@ const oriDesFinishedStyle = new Style({
 const interStyle = new Style({
     stroke: new Stroke({
         color: COLOURS.yellow,
-        width: 5,
-        lineDash: [5, 7],
+        width: 3,
+        // lineDash: [5, 7],
     }),
 });
 
 const interFinishedStyle = new Style({
     stroke: new Stroke({
         color: COLOURS.yellow,
-        width: 4,
-        lineDash: [5, 7],
+        width: 2,
+        // lineDash: [5, 7],
     }),
 });
 
@@ -197,7 +219,7 @@ const oriAirportStyle = new Style({
         radius: 6,
         fill: new Fill({color: COLOURS.green}),
         stroke: new Stroke({
-            color: COLOURS.dark_gray, width: 3
+            color: COLOURS.bg3, width: 3
         })
     })
 });
@@ -207,7 +229,7 @@ const desAirportStyle = new Style({
         radius: 6,
         fill: new Fill({color: COLOURS.red}),
         stroke: new Stroke({
-            color: COLOURS.dark_gray, width: 3
+            color: COLOURS.bg3, width: 3
         })
     })
 });
@@ -217,7 +239,7 @@ const hybridAirportStyle = new Style({
         radius: 6,
         fill: new Fill({color: COLOURS.orange}),
         stroke: new Stroke({
-            color: COLOURS.dark_gray, width: 3
+            color: COLOURS.bg3, width: 3
         })
     })
 });
@@ -255,7 +277,11 @@ popupOverlay.setOffset([2, -10]); // Adjust the vertical offset as needed
 
 
 // create flights
-function flightsLoader() {
+function flightsLoader(flightsData) {
+
+    // clear previous flights layer
+    //flightsSource.clear();
+
     for (let i = 0; i < flightsData.length; i++) {
         const flight = flightsData[i];
         const ori = flight.ori;
@@ -346,7 +372,8 @@ function flightsLoader() {
 
 const flightsSource = new Vector({
     attributions: 'Base Maps from <a href="https://server.arcgisonline.com/ArcGIS/rest/services/">ArcGIS Online</a>, Flight Data from Sarah Cloughley',
-    loader: flightsLoader,
+    // loader: flightsLoader(fakeData),
+    loader: () => processHistoricalData(timeButton.value),
 });
   
 const flightsLayer = new VectorLayer({
@@ -359,9 +386,9 @@ const flightsLayer = new VectorLayer({
 
              // if it's a point, use the airport style
             if (feature.getGeometry().getType() === 'Point') {
-                if (HYBRID_AIRPORTS.has(feature.get('name'))) {
-                    return hybridAirportStyle;
-                }
+                // if (hybridAirports.has(feature.get('name'))) {
+                //     return hybridAirportStyle;
+                // }
                 return (feature.get('airport') === 'origin') ? oriAirportStyle : desAirportStyle;
             }
 
@@ -452,7 +479,7 @@ const replayButton = document.getElementById('replay-button');
 
 replayButton.addEventListener('click', function () {
     flightsSource.clear();
-    flightsLoader();
+    flightsLoader(flightsData);
 });
 
 // add dynamic layers to the map
