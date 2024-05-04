@@ -58,48 +58,38 @@
                 4 => '1 DAY',
             );
 
-            // create query
-            $query ="SELECT 
-                        A.trip_id,
-                        B_ori.code AS ori_code,
-                        B_des.code AS des_code,
-                        B_ori.lat AS ori_lat,
-                        B_ori.lon AS ori_lon,
-                        B_des.lat AS des_lat,
-                        B_des.lon AS des_lon,
-                        C.lat AS inter_lat,
-                        C.lon AS inter_lon
-                    FROM 
-                        aero_trip A
-                    JOIN 
-                        aero_airport_coords B_ori ON A.ori_code = B_ori.code
-                    JOIN 
-                        aero_airport_coords B_des ON A.des_code = B_des.code
-                    JOIN
-                        aero_trip_data C ON A.trip_id = C.trip_id
-                    WHERE 
-                        A.start_time >= DATE_SUB((SELECT MAX(start_time) FROM aero_trip), INTERVAL {$time_intervals[$time_period]});";
+            // round lat/lon to this many decimal points
+            $dec = 3;
 
-            // execute query
+            // create query
+            $query = "SELECT 
+                        ROUND(lat, $dec) AS rounded_lat, ROUND(lon, $dec) AS rounded_lon, COUNT(*) AS point_count
+                    FROM 
+                        aero_trip_data A
+                    WHERE 
+                        A.curr_time >= DATE_SUB((SELECT MAX(curr_time) FROM aero_trip_data), INTERVAL {$time_intervals[$time_period]})
+                    GROUP BY 
+                        rounded_lat, rounded_lon;";
+
+            // execute query and return response
             if ( !$result = mysqli_query($this->conn, $query) ) {
                 throw new DBException( "Error in query : ".$query." ".mysqli_error($this->conn));
-            } else {
-                
-                // create double array and get rid of blank array element
-                $heatmap_data = array ( array ( ));
-                unset( $heatmap_data [ 0 ]);
-                
-                // add data to array
-                while($row = mysqli_fetch_assoc($result)) {         
-                    array_push( $heatmap_data, $row );
-                }
             }
+
+            $heatmap_data = $result;
         }
 
         // format heatmap data into a JSON
         public function formatHeatmapData ( $heatmap_data ) {
 
             $formattedData = array();
+
+            // construct the JSON object for each row
+            while ($row = $heatmap_data->fetch_assoc()) {
+                $lonlat = array($row['rounded_lon'], $row['rounded_lat']);
+                $count = $row['point_count'];
+                $formattedData[] = array('lonlat' => $lonlat, 'count' => $count);
+            }
 
             header("Content-Type: application/json");
             $jsonData = json_encode(array_values($formattedData), JSON_PRETTY_PRINT);

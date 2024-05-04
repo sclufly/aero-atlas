@@ -1,6 +1,7 @@
 import './map.css';
 import fakeData from './fake_data_2.json';
 import {getHistoricalData} from './historical-data.js';
+import {getHeatmapData} from './heatmap-data.js';
 
 import TileLayer from 'ol/layer/Tile';
 import {Map, View, Feature} from 'ol';
@@ -69,39 +70,48 @@ const COLOURS = {
 
 // === HEATMAP ===
 
-var testData = {
-    max: 50,
-    data: []
-};
+// wrapper for server call for heatmap data
+var heatmapData = null;
+async function processHeatmapData(selectedValue) {
+    try {
+        // clear previous features before fetching new data
+        heatmapSource.clear();
 
-var lon, lat, c;
-for(var i=0; i<500; i++) {
-    lon = Math.random() * (-79 + 80) - 80; // Random longitude between -180 and 180
-    lat = Math.random() * (44 - 43.5) + 43.5;  // Random latitude between -85 and 85
-    c = Math.floor(Math.random() * 1000 + 500); // Random count between 0 and 49
-    testData.data.push({ lonlat: [lon, lat], count: c });
+        heatmapData = await getHeatmapData(selectedValue ?? 0);
+
+        if (heatmapData) {
+
+            // update the vector source with the fetched heatmap data
+            var heatmapFeatures = heatmapData.map(function(data) {
+                return new Feature({
+                    geometry: new Point(fromLonLat(data.lonlat)),
+                    weight: data.count
+                });
+            });
+            heatmapSource.addFeatures(heatmapFeatures);
+
+            // refresh the heatmap layer
+            heatmapLayer.getSource().changed();
+        }
+
+    } catch (error) {
+        console.error("ERROR - unable to fetch heatmap data");
+    }
 }
 
-var vectorSource = new Vector({
-    features: testData.data.map(function(data) {
-        var feature = new Feature({
-            geometry: new Point(fromLonLat(data.lonlat)), // Convert lonlat to the map's projection
-            weight: data.count // Set weight (count) for each point
-        });
-        return feature;
-    })
+var heatmapSource = new Vector({
+    loader: () => processHeatmapData(timeButton.value),
 });
 
 var heatmapLayer = new Heatmap({
-    source: vectorSource,
-    blur: 15, // Set blur radius
-    radius: 8, // Set radius size
+    source: heatmapSource,
+    blur: 15,
+    radius: 8,
     weight: function(feature) {
-        return feature.get('weight'); // Get weight from each feature
+        return feature.get('weight'); // get weight from each feature
     }
 });
 heatmapLayer.setVisible(false);
-
 
 
 // === MAP BASE ===
@@ -124,6 +134,16 @@ var tileLayer = new TileLayer({
     })
 });
 
+// dropdown functionality for selecting the time period
+const timeButton = document.getElementById("time-button");
+timeButton.addEventListener("change", async function() {
+    const selectedValue = timeButton.value;
+    await Promise.all([
+        processHistoricalData(selectedValue),
+        processHeatmapData(selectedValue)
+    ]);
+});
+
 // button functionality for showing/hiding the heatmap layer
 const heatmapButton = document.getElementById('heatmap-button');
 var showHeatmap = false;
@@ -136,7 +156,6 @@ heatmapButton.addEventListener('click', function () {
     }
     showHeatmap = !showHeatmap;
     heatmapLayer.setVisible(showHeatmap);
-    //flightsLayer.setVisible(!showHeatmap);
 });
 
 const view = new View({
@@ -154,13 +173,6 @@ const map = new Map({
 
 
 // === FLIGHT DATA ===
-
-// attach an event listener to the dropdown element
-const timeButton = document.getElementById("time-button");
-timeButton.addEventListener("change", async function() {
-    const selectedValue = timeButton.value;
-    await processHistoricalData(selectedValue);
-});
 
 // wrapper for server call for historical data
 var flightsData = null;
@@ -277,9 +289,6 @@ popupOverlay.setOffset([2, -10]); // Adjust the vertical offset as needed
 
 // create flights
 function flightsLoader(flightsData) {
-
-    // clear previous flights layer
-    //flightsSource.clear();
 
     for (let i = 0; i < flightsData.length; i++) {
         const flight = flightsData[i];
