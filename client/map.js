@@ -72,12 +72,13 @@ const COLOURS = {
 
 // wrapper for server call for heatmap data
 var heatmapData = null;
-async function processHeatmapData(selectedValue) {
+async function processHeatmapData() {
     try {
         // clear previous features before fetching new data
         heatmapSource.clear();
+        heatmapData = null;
 
-        heatmapData = await getHeatmapData(selectedValue ?? 0);
+        heatmapData = await getHeatmapData();
         console.debug(`data in map.js === ${JSON.stringify(heatmapData)}`);
 
         if (heatmapData) {
@@ -138,20 +139,22 @@ var tileLayer = new TileLayer({
 const timeButton = document.getElementById("time-button");
 timeButton.addEventListener("change", async function() {
     const selectedValue = timeButton.value;
-    await Promise.all([
-        processHistoricalData(selectedValue),
-        processHeatmapData(selectedValue)
-    ]);
+    await processHistoricalData(selectedValue);
 });
 
 // button functionality for showing/hiding the heatmap layer
 const heatmapButton = document.getElementById('heatmap-button');
 var showHeatmap = false;
 
-heatmapButton.addEventListener('click', function () {
+heatmapButton.addEventListener('click', async function () {
+
+    // if the heatmap is currently showing, hide it, otherwise show it
     if (showHeatmap) {
+        heatmapSource.clear();
+        heatmapData = null;
         heatmapButton.textContent = "Show Heatmap";
     } else {
+        await processHeatmapData();
         heatmapButton.textContent = "Hide Heatmap";
     }
     showHeatmap = !showHeatmap;
