@@ -78,9 +78,9 @@ async function processHeatmapData(selectedValue) {
         heatmapSource.clear();
 
         heatmapData = await getHeatmapData(selectedValue ?? 0);
+        console.debug(`data in map.js === ${JSON.stringify(heatmapData)}`);
 
         if (heatmapData) {
-
             // update the vector source with the fetched heatmap data
             var heatmapFeatures = heatmapData.map(function(data) {
                 return new Feature({

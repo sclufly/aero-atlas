@@ -59,7 +59,7 @@
             );
 
             // round lat/lon to this many decimal points
-            $dec = 3;
+            $dec = 2;
 
             // create query
             $query = "SELECT 
@@ -86,8 +86,8 @@
 
             // construct the JSON object for each row
             while ($row = $heatmap_data->fetch_assoc()) {
-                $lonlat = array($row['rounded_lon'], $row['rounded_lat']);
-                $count = $row['point_count'];
+                $lonlat = array(floatval($row['rounded_lon']), floatval($row['rounded_lat']));
+                $count = intval($row['point_count']);
                 $formattedData[] = array('lonlat' => $lonlat, 'count' => $count);
             }
 
