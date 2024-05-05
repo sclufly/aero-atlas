@@ -1,5 +1,5 @@
 import './map.css';
-import fakeData from './fake_data_2.json';
+import heatmapConstantData from './heatmap-data.json';
 import {getHistoricalData} from './historical-data.js';
 import {getHeatmapData} from './heatmap-data.js';
 
@@ -53,24 +53,27 @@ const COLOURS = {
     orange: '#fe8019'
 };
 
-// var hybridAirports = null;
-// //setHybridAirports(fakeData);
-// function setHybridAirports(flightsData) {
-//     let oriAirports = new Set();
-//     let desAirports = new Set();
+/* ======================== 
+var hybridAirports = null;
+//setHybridAirports(fakeData);
+function setHybridAirports(flightsData) {
+    let oriAirports = new Set();
+    let desAirports = new Set();
 
-//     flightsData.forEach(flight => { 
-//         oriAirports.add(flight.ori[2]);
-//         desAirports.add(flight.des[2]);
-//     });
+    flightsData.forEach(flight => { 
+        oriAirports.add(flight.ori[2]);
+        desAirports.add(flight.des[2]);
+    });
 
-//     hybridAirports = oriAirports.intersection(desAirports);
-// }
+    hybridAirports = oriAirports.intersection(desAirports);
+}
+======================== */
 
 
 // === HEATMAP ===
 
-// wrapper for server call for heatmap data
+/* ======================== 
+//wrapper for server call for heatmap data
 var heatmapData = null;
 async function processHeatmapData() {
     try {
@@ -100,8 +103,17 @@ async function processHeatmapData() {
     }
 }
 
+var heatmapSource = new Vector();
+======================== */
+
 var heatmapSource = new Vector({
-    loader: () => processHeatmapData(timeButton.value),
+    features: heatmapConstantData.map(function(data) {
+        var feature = new Feature({
+            geometry: new Point(fromLonLat(data.lonlat)),
+            weight: data.count
+        });
+        return feature;
+    })
 });
 
 var heatmapLayer = new Heatmap({
@@ -150,11 +162,11 @@ heatmapButton.addEventListener('click', async function () {
 
     // if the heatmap is currently showing, hide it, otherwise show it
     if (showHeatmap) {
-        heatmapSource.clear();
-        heatmapData = null;
+        //heatmapSource.clear();
+        //heatmapData = null;
         heatmapButton.textContent = "Show Heatmap";
     } else {
-        await processHeatmapData();
+        //await processHeatmapData();
         heatmapButton.textContent = "Hide Heatmap";
     }
     showHeatmap = !showHeatmap;
