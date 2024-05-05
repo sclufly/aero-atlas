@@ -104,7 +104,7 @@ async function processHeatmapData() {
 }
 
 var heatmapSource = new Vector();
-======================== */
+
 
 var heatmapSource = new Vector({
     features: heatmapConstantData.map(function(data) {
@@ -125,6 +125,7 @@ var heatmapLayer = new Heatmap({
     }
 });
 heatmapLayer.setVisible(false);
+======================== */
 
 
 // === MAP BASE ===
@@ -154,6 +155,7 @@ timeButton.addEventListener("change", async function() {
     await processHistoricalData(selectedValue);
 });
 
+/* ========================
 // button functionality for showing/hiding the heatmap layer
 const heatmapButton = document.getElementById('heatmap-button');
 var showHeatmap = false;
@@ -172,6 +174,7 @@ heatmapButton.addEventListener('click', async function () {
     showHeatmap = !showHeatmap;
     heatmapLayer.setVisible(showHeatmap);
 });
+======================== */
 
 const view = new View({
     center: [-8800000, 5400000],
@@ -181,7 +184,8 @@ const view = new View({
 // map object
 const map = new Map({
     target: 'map',
-    layers: [tileLayer, heatmapLayer],
+    // layers: [tileLayer, heatmapLayer],
+    layers: [tileLayer],
     view: view
 });
 

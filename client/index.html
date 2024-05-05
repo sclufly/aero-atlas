@@ -29,7 +29,7 @@
         
         <section class="historical-data">
             <button class="historical-data-button" onclick="toggleParagraph('historical-data-para')">Historical Flight Data +</button>
-            <p id="historical-data-para" class="hidden">This map displays historical flight data from the selected time period. The yellow sections represent the part of the flight path that I personally captured from my antenna, while the brown sections fill in the rest of the flight. <br> Click on airports, change the map style, or display the heatmap to see more.</p>
+            <p id="historical-data-para" class="hidden">This map displays historical flight data from the selected time period. The yellow sections represent the part of the flight path that I personally captured from my antenna, while the brown sections fill in the rest of the flight. <br> Change the time period, click on airports, or change the map style to see more.</p>
             <div id="map-div">
                 <div id="map"></div>
                 <script type="module" src="./map.js"></script>
@@ -51,7 +51,7 @@
                         <option value="World_Topo_Map">Topology Base Map</option>
                         <option value="World_Imagery">Imagery Base Map</option>
                     </select>
-                    <button id="heatmap-button">Show Heatmap</button>
+                    <!-- <button id="heatmap-button">Show Heatmap</button> -->
                     <button id="replay-button">Replay Animation</button>
                 </div>
             </div>
