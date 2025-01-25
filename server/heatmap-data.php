@@ -1,5 +1,10 @@
 <?php
 
+    // allow requests from localhost
+    $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+    if (strpos($origin, 'localhost') !== false) {
+        header("Access-Control-Allow-Origin: $origin");
+    }
 
     class dbConnection {
 
