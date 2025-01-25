@@ -1,5 +1,4 @@
 import './map.css';
-import heatmapConstantData from './heatmap-data.json';
 import {getHistoricalData} from './historical-data.js';
 import {getHeatmapData} from './heatmap-data.js';
 
@@ -53,34 +52,15 @@ const COLOURS = {
     orange: '#fe8019'
 };
 
-// ======================== 
-var hybridAirports = null;
-function setHybridAirports(flightsData) {
-    let oriAirports = new Set();
-    let desAirports = new Set();
-
-    flightsData.forEach(flight => { 
-        oriAirports.add(flight.ori[2]);
-        desAirports.add(flight.des[2]);
-    });
-
-    hybridAirports = oriAirports.intersection(desAirports);
-}
-// ========================
-
 
 // === HEATMAP ===
 
-/* ======================== 
-//wrapper for server call for heatmap data
+// wrapper for server call for heatmap data
 var heatmapData = null;
-async function processHeatmapData() {
+async function processHeatmapData(selectedValue) {
     try {
-        // clear previous features before fetching new data
-        heatmapSource.clear();
         heatmapData = null;
-
-        heatmapData = await getHeatmapData();
+        heatmapData = await getHeatmapData(selectedValue ?? 0);
         console.debug(`data in map.js === ${JSON.stringify(heatmapData)}`);
 
         if (heatmapData) {
@@ -91,6 +71,7 @@ async function processHeatmapData() {
                     weight: data.count
                 });
             });
+            // update heatmap source
             heatmapSource.addFeatures(heatmapFeatures);
 
             // refresh the heatmap layer
@@ -103,17 +84,7 @@ async function processHeatmapData() {
 }
 
 var heatmapSource = new Vector();
-
-
-var heatmapSource = new Vector({
-    features: heatmapConstantData.map(function(data) {
-        var feature = new Feature({
-            geometry: new Point(fromLonLat(data.lonlat)),
-            weight: data.count
-        });
-        return feature;
-    })
-});
+processHeatmapData();
 
 var heatmapLayer = new Heatmap({
     source: heatmapSource,
@@ -124,7 +95,6 @@ var heatmapLayer = new Heatmap({
     }
 });
 heatmapLayer.setVisible(false);
-======================== */
 
 
 // === MAP BASE ===
@@ -150,31 +120,26 @@ var tileLayer = new TileLayer({
 // dropdown functionality for selecting the time period
 const timeButton = document.getElementById("time-button");
 timeButton.addEventListener("change", async function() {
+
+    // clear previous features before fetching new data
+    flightsSource.clear();
+    heatmapSource.clear();
+
     const selectedValue = timeButton.value;
     await processHistoricalData(selectedValue);
+    await processHeatmapData(selectedValue);
 });
 
-/* ========================
 // button functionality for showing/hiding the heatmap layer
 const heatmapButton = document.getElementById('heatmap-button');
 var showHeatmap = false;
-
 heatmapButton.addEventListener('click', async function () {
-
-    // if the heatmap is currently showing, hide it, otherwise show it
-    if (showHeatmap) {
-        //heatmapSource.clear();
-        //heatmapData = null;
-        heatmapButton.textContent = "Show Heatmap";
-    } else {
-        //await processHeatmapData();
-        heatmapButton.textContent = "Hide Heatmap";
-    }
+    heatmapButton.textContent = showHeatmap ? "Show Heatmap" : "Hide Heatmap";
     showHeatmap = !showHeatmap;
     heatmapLayer.setVisible(showHeatmap);
 });
-======================== */
 
+// starting view
 const view = new View({
     center: [-8800000, 5400000],
     zoom: 5.5
@@ -183,8 +148,7 @@ const view = new View({
 // map object
 const map = new Map({
     target: 'map',
-    // layers: [tileLayer, heatmapLayer],
-    layers: [tileLayer],
+    layers: [tileLayer, heatmapLayer],
     view: view
 });
 
@@ -192,14 +156,25 @@ const map = new Map({
 
 // === FLIGHT DATA ===
 
+// gather hybrid airports (both origin and destination)
+var hybridAirports = null;
+function setHybridAirports(flightsData) {
+    let oriAirports = new Set();
+    let desAirports = new Set();
+
+    flightsData.forEach(flight => { 
+        oriAirports.add(flight.ori[2]);
+        desAirports.add(flight.des[2]);
+    });
+
+    hybridAirports = oriAirports.intersection(desAirports);
+}
+
 // wrapper for server call for historical data
 var flightsData = null;
 async function processHistoricalData(selectedValue) {
     try {
-        // clear previous features before fetching new data
-        flightsSource.clear();
         flightsData = null;
-
         flightsData = await getHistoricalData(selectedValue ?? 0);
         console.debug(`data in map.js === ${JSON.stringify(flightsData)}`);
 
@@ -302,8 +277,8 @@ map.on('click', function(event) {
     }
 });
 
-// Adjust the offset of the popup to move it above the feature
-popupOverlay.setOffset([2, -10]); // Adjust the vertical offset as needed
+// adjust the offset of the popup to move it above the feature
+popupOverlay.setOffset([2, -10]);
 
 
 // create flights
@@ -329,18 +304,18 @@ function flightsLoader(flightsData) {
             airport: "origin",
         });
 
-        // Iterate over each pair of consecutive points
+        // iterate over each pair of consecutive points
         for (let j = 0; j < allPoints.length - 1; j++) {
             const fromPoint = allPoints[j];
             const toPoint = allPoints[j + 1];
 
-            // Create an arc circle between the two locations
+            // create an arc circle between the two locations
             const arcGenerator = new arc.GreatCircle(
                 {x: fromPoint[1], y: fromPoint[0]},
                 {x: toPoint[1], y: toPoint[0]}
             );
 
-            // Generate the arc line
+            // generate the arc line
             const arcLine = arcGenerator.Arc(100, {offset: 10});
             
             // deal with dateline cross
@@ -349,7 +324,7 @@ function flightsLoader(flightsData) {
                 dateLineCrossIndex = j || 1;
             }
 
-            // Add arc coordinates to the concatenated points array
+            // add arc coordinates to the concatenated points array
             allGeometries = allGeometries.concat(arcLine.geometries);
         }
 
