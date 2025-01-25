@@ -52,18 +52,29 @@
         }
     
         // get all heatmap data for the given time period
-        public function getHeatmapData ( &$heatmap_data ) {
+        public function getHeatmapData ( $time_period, &$heatmap_data ) {
 
             // round lat/lon to this many decimal points
             $dec = 3;
 
+            // create mapping for time periods
+            $time_intervals = array(
+                0 => '30 MINUTE',
+                1 => '1 HOUR',
+                2 => '3 HOUR',
+                3 => '12 HOUR',
+                4 => '1 DAY',
+            );
+
             // create query
             $query = "SELECT 
-                        ROUND(lat, $dec) AS rounded_lat, ROUND(lon, $dec) AS rounded_lon, COUNT(*) AS point_count
+                        ROUND(C.lat, $dec) AS rounded_lat, ROUND(C.lon, $dec) AS rounded_lon, COUNT(*) AS point_count
                     FROM 
-                        aero_trip_data A
+                        aero_trip_data C
+                    JOIN 
+                        aero_trip A ON C.trip_id = A.trip_id
                     WHERE 
-                        A.curr_time >= DATE_SUB((SELECT MAX(curr_time) FROM aero_trip_data), INTERVAL 3 HOUR)
+                        A.start_time >= DATE_SUB((SELECT MAX(start_time) FROM aero_trip), INTERVAL {$time_intervals[$time_period]})
                     GROUP BY 
                         rounded_lat, rounded_lon;";
 
@@ -94,6 +105,9 @@
     }
 
     $error = "OK";
+
+    // get time period from request params & store it
+    $time_period = htmlspecialchars($_GET["tp"]);
     
     // set up database object
     try {
@@ -106,7 +120,7 @@
     // get heatmap data from the database
     if ( $error == "OK" ) {
         try {
-            $db->getHeatmapData( $heatmap_data );
+            $db->getHeatmapData( $time_period, $heatmap_data );
             $db->formatHeatmapData( $heatmap_data );
         } catch ( Exception $e ) {
             $error = "ERROR: ".$e->getMessage()."\n";
