@@ -53,9 +53,8 @@ const COLOURS = {
     orange: '#fe8019'
 };
 
-/* ======================== 
+// ======================== 
 var hybridAirports = null;
-//setHybridAirports(fakeData);
 function setHybridAirports(flightsData) {
     let oriAirports = new Set();
     let desAirports = new Set();
@@ -67,7 +66,7 @@ function setHybridAirports(flightsData) {
 
     hybridAirports = oriAirports.intersection(desAirports);
 }
-======================== */
+// ========================
 
 
 // === HEATMAP ===
@@ -204,6 +203,9 @@ async function processHistoricalData(selectedValue) {
         flightsData = await getHistoricalData(selectedValue ?? 0);
         console.debug(`data in map.js === ${JSON.stringify(flightsData)}`);
 
+        // set hybrid airports
+        setHybridAirports(flightsData);
+
         // re-render
         flightsLoader(flightsData);
 
@@ -232,7 +234,6 @@ const interStyle = new Style({
     stroke: new Stroke({
         color: COLOURS.yellow,
         width: 3,
-        // lineDash: [5, 7],
     }),
 });
 
@@ -240,7 +241,6 @@ const interFinishedStyle = new Style({
     stroke: new Stroke({
         color: COLOURS.yellow,
         width: 2,
-        // lineDash: [5, 7],
     }),
 });
 
@@ -267,7 +267,7 @@ const desAirportStyle = new Style({
 const hybridAirportStyle = new Style({
     image: new CircleStyle({
         radius: 6,
-        fill: new Fill({color: COLOURS.orange}),
+        fill: new Fill({color: COLOURS.dark_yellow}),
         stroke: new Stroke({
             color: COLOURS.bg3, width: 3
         })
@@ -413,9 +413,9 @@ const flightsLayer = new VectorLayer({
 
              // if it's a point, use the airport style
             if (feature.getGeometry().getType() === 'Point') {
-                // if (hybridAirports.has(feature.get('name'))) {
-                //     return hybridAirportStyle;
-                // }
+                if (hybridAirports.has(feature.get('name'))) {
+                    return hybridAirportStyle;
+                }
                 return (feature.get('airport') === 'origin') ? oriAirportStyle : desAirportStyle;
             }
 
