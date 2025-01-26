@@ -73,6 +73,10 @@
                         aero_trip_data C
                     JOIN 
                         aero_trip A ON C.trip_id = A.trip_id
+                    JOIN 
+                        aero_airport_coords B_ori ON A.ori_code = B_ori.code
+                    JOIN 
+                        aero_airport_coords B_des ON A.des_code = B_des.code
                     WHERE 
                         A.start_time >= DATE_SUB((SELECT MAX(start_time) FROM aero_trip), INTERVAL {$time_intervals[$time_period]})
                     GROUP BY 
